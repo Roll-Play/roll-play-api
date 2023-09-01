@@ -1,13 +1,18 @@
-package storage
+package storage_providers
 
 import (
 	"time"
 
+	repository_interfaces "github.com/Roll-play/roll-play-backend/pkg/repositories/interfaces"
 	"github.com/jmoiron/sqlx"
 )
 
 type PostgresProvider struct {
 	DB *sqlx.DB
+}
+
+type PostgresProviderAdapter struct {
+	*PostgresProvider
 }
 
 func (pp *PostgresProvider) Connect(connectionString string) error {
@@ -18,6 +23,20 @@ func (pp *PostgresProvider) Connect(connectionString string) error {
 	}
 	pp.DB = db
 	return nil
+}
+
+func (pp *PostgresProvider) Create(repository repository_interfaces.Repository) error {
+	err := repository.Create(pp.DB)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (pp *PostgresProvider) Db() *sqlx.DB {
+	return pp.DB
 }
 
 func newPostgresDB(connString string) (*sqlx.DB, error) {

@@ -2,7 +2,9 @@ package api
 
 import (
 	"github.com/Roll-play/roll-play-backend/pkg/api/handler"
+	app_middleware "github.com/Roll-play/roll-play-backend/pkg/api/middlewares"
 	"github.com/Roll-play/roll-play-backend/pkg/storage"
+	storage_providers "github.com/Roll-play/roll-play-backend/pkg/storage/providers"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -13,8 +15,7 @@ type Application struct {
 }
 
 func NewApp(dbConnString string) (*Application, error) {
-	provider := new(storage.PostgresProvider)
-
+provider := new(storage_providers.PostgresProvider)
 	storage, err := storage.NewStorage(dbConnString, provider)
 
 	if err != nil {
@@ -24,6 +25,7 @@ func NewApp(dbConnString string) (*Application, error) {
 	
 	server.Use(middleware.Logger())
 	server.Use(middleware.Recover())
+	server.Use(app_middleware.DBMiddleware(storage))
 
 	setRoutes(server)
 	return &Application{
