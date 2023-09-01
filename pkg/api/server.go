@@ -15,7 +15,7 @@ type Application struct {
 }
 
 func NewApp(dbConnString string) (*Application, error) {
-provider := new(storage_providers.PostgresProvider)
+	provider := new(storage_providers.PostgresProvider)
 	storage, err := storage.NewStorage(dbConnString, provider)
 
 	if err != nil {
