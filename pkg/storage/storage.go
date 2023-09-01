@@ -1,23 +1,29 @@
 package storage
 
 import (
-	"time"
-
+	repository_interfaces "github.com/Roll-play/roll-play-backend/pkg/repositories/interfaces"
 	_ "github.com/jackc/pgx/v5/stdlib"
-
-	"github.com/jmoiron/sqlx"
 )
 
-func NewDB(connString string, maxOpenConns int, maxIdleConns int, maxConnLifeTime int) (*sqlx.DB, error) {
-	db, err := sqlx.Open("pgx", connString)
-	
+type Provider interface {
+	Connect(connString string) error
+	Create(repository_interfaces.Repository) error
+}
+
+
+
+type Storage struct {
+	Provider *Provider
+} 
+
+func NewStorage(connString string, provider Provider) (*Storage, error) {
+	err := provider.Connect(connString)
+
 	if err != nil {
 		return nil, err
 	}
 
-	db.SetMaxOpenConns(maxOpenConns)
-	db.SetMaxIdleConns(maxIdleConns)
-	db.SetConnMaxLifetime(time.Minute * time.Duration(maxConnLifeTime))
-
-	return db, err
-} 
+	return &Storage{
+		Provider: &provider,
+	}, nil
+}
