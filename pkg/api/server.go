@@ -1,40 +1,58 @@
 package api
 
 import (
+	"time"
+
 	"github.com/Roll-play/roll-play-backend/pkg/api/handler"
-	app_middleware "github.com/Roll-play/roll-play-backend/pkg/api/middlewares"
-	"github.com/Roll-play/roll-play-backend/pkg/storage"
-	storage_providers "github.com/Roll-play/roll-play-backend/pkg/storage/providers"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 type Application struct {
-	Server *echo.Echo
-	Storage *storage.Storage
+	Server  *echo.Echo
+	Storage *sqlx.DB
 }
 
 func NewApp(dbConnString string) (*Application, error) {
-	provider := new(storage_providers.PostgresProvider)
-	storage, err := storage.NewStorage(dbConnString, provider)
+	storage, err := newDB(dbConnString)
 
 	if err != nil {
 		return nil, err
 	}
 	server := echo.New()
-	
+
 	server.Use(middleware.Logger())
 	server.Use(middleware.Recover())
-	server.Use(app_middleware.DBMiddleware(storage))
 
-	setRoutes(server)
+	setRoutes(server, storage)
 	return &Application{
-		Server: server,
+		Server:  server,
 		Storage: storage,
 	}, nil
 }
 
-func setRoutes(server *echo.Echo) {
+func setRoutes(server *echo.Echo, storage *sqlx.DB) {
 	server.GET("/healthz", handler.HealthHandler)
-	server.POST("/user", handler.SignUpHandler)
+	setUserRoutes(server, storage)
+}
+
+func setUserRoutes(server *echo.Echo, storage *sqlx.DB) {
+	uh := handler.NewUserHandler(storage)
+	server.POST("/user", uh.SignUpHandler)
+}
+
+func newDB(connString string) (*sqlx.DB, error) {
+	db, err := sqlx.Open("pgx", connString)
+
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(time.Minute * time.Duration(5))
+
+	return db, err
 }
