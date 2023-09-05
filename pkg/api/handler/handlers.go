@@ -15,6 +15,6 @@ func HealthHandler(c echo.Context) error {
 	if err := c.Bind(r); err != nil {
 		return err
 	}
-	
+
 	return c.JSON(http.StatusOK, r)
 }

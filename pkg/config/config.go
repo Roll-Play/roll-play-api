@@ -2,50 +2,27 @@ package config
 
 import (
 	"os"
-	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
-var keys = []string{	
-	"PORT",
-	"DB_HOST",
-	"DB_USER",
-	"DB_PASSWORD",
-	"DB_NAME",
-}
-
-func Config() (map[string]string, error) {
-	isDocker, err := strconv.ParseBool(os.Getenv("DOCKER"))
-
-	if err != nil {
-		isDocker = false
-	}
+func Config(docker bool, envPath string) error {
 
 	// ugly hack to accommodate config with .env files
 	// or docker compose
-	if !isDocker {
-		if err := godotenv.Load(); err != nil {
-			return nil, err
+	if !docker {
+		if err := godotenv.Load(envPath); err != nil {
+			return err
 		}
 	}
 
-	envVars := make(map[string]string, len(keys))
+	port := os.Getenv("PORT")
 
-	for _, key := range keys {
-		if key == "PORT" {
-			port := os.Getenv(key)
-
-			if []byte(port)[0] == ':' {
-				envVars[key] = port
-				continue	
-			}
-
-			envVars[key] = string(append([]byte(":"), []byte(port)...))
-			continue
-		}
-		envVars[key] = os.Getenv(key)	
+	if []byte(port)[0] == ':' {
+		return nil
 	}
 
-	return envVars, nil
+	os.Setenv("PORT", string(append([]byte(":"), []byte(port)...)))
+
+	return nil
 }

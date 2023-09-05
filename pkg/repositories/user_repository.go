@@ -6,13 +6,18 @@ import (
 )
 
 type UserRepository struct {
-	User *entities.User
+	user *entities.User
 }
 
 func (ur *UserRepository) Create(db *sqlx.DB) error {
 
-	_, err := db.Exec("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", "fizi", "fizi@gmail.com", "123123")
-	
+	err := db.QueryRowx(
+		"INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, created_at, updated_at",
+		ur.user.Username,
+		ur.user.Email,
+		ur.user.Password,
+	).Scan(&ur.user.Id, &ur.user.CreatedAt, &ur.user.UpdatedAt)
+
 	if err != nil {
 		return err
 	}
@@ -22,6 +27,6 @@ func (ur *UserRepository) Create(db *sqlx.DB) error {
 
 func NewUserRepository(entity *entities.User) *UserRepository {
 	return &UserRepository{
-		User: entity,
+		user: entity,
 	}
 }
