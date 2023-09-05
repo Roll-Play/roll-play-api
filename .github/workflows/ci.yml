@@ -25,10 +25,10 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     env:
+      DB_HOST: localhost
       DB_USER: root
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: rollplay_test
-      DOCKER: true
+      DB_PASSWORD: root
+      DB_NAME: rollplay_test
 
     services:
       postgres:
