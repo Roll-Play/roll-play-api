@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/Roll-play/roll-play-backend/pkg/config"
@@ -11,7 +12,13 @@ import (
 )
 
 func SetupTestDB(envPath string) (*sqlx.DB, error) {
-	err := config.Config(false, envPath)
+	isDocker, err := strconv.ParseBool(os.Getenv("DOCKER"))
+
+	if err != nil {
+		isDocker = false
+	}
+
+	err = config.Config(isDocker, envPath)
 
 	if err != nil {
 		return nil, err
