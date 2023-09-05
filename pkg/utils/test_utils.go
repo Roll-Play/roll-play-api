@@ -18,8 +18,6 @@ func SetupTestDB(envPath string) (*sqlx.DB, error) {
 		isDocker = false
 	}
 
-	fmt.Println("BBBBBBBBBBB", isDocker)
-
 	err = config.Config(isDocker, envPath)
 
 	if err != nil {

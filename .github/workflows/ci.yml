@@ -29,6 +29,7 @@ jobs:
       DB_USER: root
       DB_PASSWORD: root
       DB_NAME: rollplay_test
+      DOCKER: true
 
     services:
       postgres:
