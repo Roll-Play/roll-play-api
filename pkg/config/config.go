@@ -18,6 +18,11 @@ func Config(docker bool, envPath string) error {
 
 	port := os.Getenv("PORT")
 
+	if port == "" {
+		os.Setenv("PORT", ":8080")
+		return nil
+	}
+
 	if []byte(port)[0] == ':' {
 		return nil
 	}
