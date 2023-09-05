@@ -17,7 +17,7 @@ test:
 
 postgres-up:
 	# Start a PostgreSQL container in detached mode with environment variables
-	sudo docker run --name test-postgres -e POSTGRES_USER=${DB_USER} -e POSTGRES_PASSWORD=${DB_PASSWORD} -e POSTGRES_DB=${DB_NAME} -p 5432:5432 -d postgres:latest
+	sudo docker run --name test-postgres -e POSTGRES_USER=${DB_USER} -e POSTGRES_PASSWORD=${DB_PASSWORD} -e POSTGRES_DB="${DB_NAME}_test" -p 5432:5432 -d postgres:latest
 
 postgres-down:
 	sudo docker stop test-postgres

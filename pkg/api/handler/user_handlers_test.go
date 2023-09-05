@@ -1,6 +1,8 @@
 package handler_test
 
 import (
+	// Import your packages here
+
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -9,66 +11,93 @@ import (
 
 	"github.com/Roll-play/roll-play-backend/pkg/api"
 	"github.com/Roll-play/roll-play-backend/pkg/api/handler"
+	"github.com/Roll-play/roll-play-backend/pkg/entities"
 	"github.com/Roll-play/roll-play-backend/pkg/utils"
+	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func TestUserHandlers(t *testing.T) {
-	t.Run("registers a user", func(t *testing.T) {
-		e := echo.New()
+type UserHandlersSuite struct {
+	suite.Suite
+	app *api.Application
+	db  *sqlx.DB
+}
 
-		db, err := utils.SetupTestDB("../../../.env")
+func (suite *UserHandlersSuite) SetupTest() {
+	// Initialize your test environment here.
+	e := echo.New()
+	db, err := utils.SetupTestDB("../../../.env")
+	assert.NoError(suite.T(), err)
+	err = db.Ping()
+	assert.NoError(suite.T(), err)
 
-		assert.NoError(t, err)
+	// Drop the "users" table before each test.
+	_, err = db.Exec("DROP TABLE IF EXISTS users;")
+	assert.NoError(suite.T(), err)
 
-		err = db.Ping()
+	schema := `
+		CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+		CREATE TABLE IF NOT EXISTS users (
+			id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+			username VARCHAR(50) NOT NULL UNIQUE,
+			email VARCHAR(255) NOT NULL UNIQUE,
+			password VARCHAR(255) NOT NULL,
+			is_active boolean DEFAULT FALSE,
+			created_at TIMESTAMP DEFAULT now(),
+			updated_at TIMESTAMP DEFAULT now(),
+			deleted_at TIMESTAMP
+		);
+	`
 
-		assert.NoError(t, err)
+	err = utils.ExecSchema(db, schema)
+	assert.NoError(suite.T(), err)
 
-		schema := `
-				CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+	suite.app = &api.Application{
+		Server:  e,
+		Storage: db,
+	}
+	suite.db = db
+}
 
-				CREATE TABLE IF NOT EXISTS users (
-						id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-						username VARCHAR(50) NOT NULL,
-						email VARCHAR(255) NOT NULL,
-						password VARCHAR(255) NOT NULL,
-						is_active boolean DEFAULT FALSE,
-						created_at TIMESTAMP DEFAULT now(),
-						updated_at TIMESTAMP DEFAULT now(),
-						deleted_at TIMESTAMP
-				);
-		`
+func (suite *UserHandlersSuite) TearDownTest() {
+	suite.db.Close()
+}
 
-		err = utils.ExecSchema(db, schema)
-
-		assert.NoError(t, err)
-
-		app := api.Application{
-			Server:  e,
-			Storage: db,
-		}
-
-		requestBody := []byte(`{
+func (suite *UserHandlersSuite) TestUserHandlerSuccess() {
+	requestBody := []byte(`{
 				"username": "fizi",
 				"email": "fizi@gmail.com",
 				"password": "123123"
 			}`)
 
-		req := httptest.NewRequest(http.MethodPost, "/user", bytes.NewBuffer(requestBody))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/user", bytes.NewBuffer(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
 
-		c := app.Server.NewContext(req, rec)
+	c := suite.app.Server.NewContext(req, rec)
+	var jsonRes handler.UserResponse
 
-		var jsonRes handler.UserResponse
+	uh := handler.NewUserHandler(suite.db)
+	err := uh.SignUpHandler(c)
 
-		uh := handler.NewUserHandler(db)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), http.StatusCreated, rec.Code)
 
-		assert.NoError(t, uh.SignUpHandler(c))
-		json.Unmarshal(rec.Body.Bytes(), &jsonRes)
+	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
 
-		assert.Equal(t, "fizi", jsonRes.Username)
-	})
+	var user entities.User
+	suite.db.Get(&user, "SELECT id, password, email, username FROM users WHERE id=$1", jsonRes.Id)
+
+	assert.Equal(suite.T(), jsonRes.Username, user.Username)
+	assert.Equal(suite.T(), jsonRes.Email, user.Email)
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte("123123"))
+	assert.NoError(suite.T(), err)
+}
+
+func TestUserHandlersSuite(t *testing.T) {
+	suite.Run(t, new(UserHandlersSuite))
 }

@@ -25,6 +25,16 @@ func (ur *UserRepository) Create(db *sqlx.DB) error {
 	return nil
 }
 
+func (ur *UserRepository) FindByEmail(db *sqlx.DB) error {
+	err := db.Get(&ur.user, "SELECT id, email, username, created_at FROM ")
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func NewUserRepository(entity *entities.User) *UserRepository {
 	return &UserRepository{
 		user: entity,

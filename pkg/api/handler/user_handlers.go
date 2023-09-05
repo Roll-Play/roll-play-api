@@ -52,7 +52,7 @@ func (uh *UserHandler) SignUpHandler(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, &UserResponse{
+	return c.JSON(http.StatusCreated, &UserResponse{
 		Id:        u.Id,
 		Username:  u.Username,
 		Email:     u.Email,
