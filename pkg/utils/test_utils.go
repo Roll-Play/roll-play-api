@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/Roll-play/roll-play-backend/pkg/config"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 )
@@ -38,19 +40,19 @@ func SetupTestDB(envPath string) (*sqlx.DB, error) {
 	return db, nil
 }
 
-func ExecSchema(db *sqlx.DB, schema string) error {
-	statements := strings.Split(schema, ";")
+func RunMigrations(migrationSource string) error {
+	m, err := migrate.New(migrationSource, os.Getenv("DB_URL"))
 
-	for _, statement := range statements {
-		statement = strings.TrimSpace(statement)
-		if statement == "" {
-			continue
-		}
+	if err != nil {
+		return err
+	}
 
-		_, err := db.Exec(statement)
-		if err != nil {
-			return fmt.Errorf("error executing SQL statement: %v", err)
-		}
+	m.Down()
+
+	err = m.Up()
+
+	if err != nil {
+		return err
 	}
 
 	return nil

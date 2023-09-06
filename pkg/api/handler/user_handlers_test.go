@@ -31,29 +31,8 @@ func (suite *UserHandlersSuite) SetupTest() {
 	e := echo.New()
 	db, err := utils.SetupTestDB("../../../.env")
 	assert.NoError(suite.T(), err)
-	err = db.Ping()
-	assert.NoError(suite.T(), err)
 
-	// Drop the "users" table before each test.
-	_, err = db.Exec("DROP TABLE IF EXISTS users;")
-	assert.NoError(suite.T(), err)
-
-	schema := `
-		CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-		CREATE TABLE IF NOT EXISTS users (
-			id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-			username VARCHAR(50) NOT NULL UNIQUE,
-			email VARCHAR(255) NOT NULL UNIQUE,
-			password VARCHAR(255) NOT NULL,
-			is_active boolean DEFAULT FALSE,
-			created_at TIMESTAMP DEFAULT now(),
-			updated_at TIMESTAMP DEFAULT now(),
-			deleted_at TIMESTAMP
-		);
-	`
-
-	err = utils.ExecSchema(db, schema)
-	assert.NoError(suite.T(), err)
+	utils.RunMigrations("file://../../../migrations")
 
 	suite.app = &api.Application{
 		Server:  e,
