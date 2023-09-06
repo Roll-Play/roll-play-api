@@ -29,6 +29,7 @@ jobs:
       DB_USER: root
       DB_PASSWORD: root
       DB_NAME: rollplay
+      DB_URL: postgresql://root:root@localhost:5432/rollplay_test?sslmode=disable
       DOCKER: true
 
     services:
