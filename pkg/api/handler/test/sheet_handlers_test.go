@@ -252,7 +252,7 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerSuccess() {
 	errg := sh.DeleteSheetHandler(c)
 
 	assert.NoError(t, errg)
-	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, http.StatusNoContent, rec.Code)
 
 	test := new(entities.Sheet)
 	errex := suite.db.Get(test, "SELECT name, description, properties, background FROM sheets WHERE id=$1", sheet.Id)
