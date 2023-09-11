@@ -36,11 +36,21 @@ func NewApp(dbConnString string) (*Application, error) {
 func setRoutes(server *echo.Echo, storage *sqlx.DB) {
 	server.GET("/healthz", handler.HealthHandler)
 	setUserRoutes(server, storage)
+	setSheetRoutes(server, storage)
 }
 
 func setUserRoutes(server *echo.Echo, storage *sqlx.DB) {
 	uh := handler.NewUserHandler(storage)
 	server.POST("/user", uh.SignUpHandler)
+}
+
+func setSheetRoutes(server *echo.Echo, storage *sqlx.DB) {
+	sh := handler.NewSheetHandler(storage)
+	server.POST("/sheet", sh.CreateSheetHandler)
+	server.GET("/sheet", sh.GetSheetListHandler)
+	server.GET("/sheet/:id", sh.GetSheetHandler)
+	server.PATCH("/sheet/:id", sh.UpdateSheetHandler)
+	server.DELETE("/sheet/:id", sh.DeleteSheetHandler)
 }
 
 func newDB(connString string) (*sqlx.DB, error) {
