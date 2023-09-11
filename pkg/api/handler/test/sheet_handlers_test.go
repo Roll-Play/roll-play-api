@@ -221,6 +221,40 @@ func (suite *SheetHandlersSuite) TestPatchSheetHandlerSuccess() {
 	assert.Equal(suite.T(), jsonRes.Background, sheet.Background)
 }
 
+func (suite *SheetHandlersSuite) TestDeleteSheetHandlerSuccess() {
+	sheet := entities.Sheet{
+		Name:        "Test Name",
+		Description: "Not a lengthy description",
+		Properties:  "This should look like a json",
+		Background:  "Not a lenghty background",
+	}
+	err := suite.db.Get(&sheet, `INSERT INTO sheets (name, description, properties, background) VALUES ($1, $2, $3, $4) 
+								RETURNING id, name, description, properties, background`,
+		sheet.Name, sheet.Description, sheet.Properties, sheet.Background)
+
+	assert.NoError(suite.T(), err)
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := suite.app.Server.NewContext(req, rec)
+	c.SetPath("/sheet/:id")
+	c.SetParamNames("id")
+	c.SetParamValues(sheet.Id.String())
+
+	sh := handler.NewSheetHandler(suite.db)
+	errg := sh.DeleteSheetHandler(c)
+
+	assert.NoError(suite.T(), errg)
+	assert.Equal(suite.T(), http.StatusOK, rec.Code)
+
+	test := new(entities.Sheet)
+	errex := suite.db.Get(test, "SELECT name, description, properties, background FROM sheets WHERE id=$1", sheet.Id)
+
+	assert.Error(suite.T(), errex)
+
+}
+
 func TestSheetHandlersSuite(t *testing.T) {
 	suite.Run(t, new(SheetHandlersSuite))
 }

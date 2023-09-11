@@ -50,6 +50,7 @@ func setSheetRoutes(server *echo.Echo, storage *sqlx.DB) {
 	server.GET("/sheet", sh.GetSheetListHandler)
 	server.GET("/sheet/:id", sh.GetSheetHandler)
 	server.PATCH("/sheet/:id", sh.PatchSheetHandler)
+	server.DELETE("/sheet/:id", sh.DeleteSheetHandler)
 }
 
 func newDB(connString string) (*sqlx.DB, error) {

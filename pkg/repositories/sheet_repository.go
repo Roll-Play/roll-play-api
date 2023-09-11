@@ -17,8 +17,6 @@ func (sr *SheetRepository) Create(db *sqlx.DB) error {
 	err := db.Get(sr.sheet, "INSERT INTO sheets (name, description, properties, background) VALUES ($1, $2, $3, $4) RETURNING *",
 		sr.sheet.Name, sr.sheet.Description, sr.sheet.Properties, sr.sheet.Background)
 
-	fmt.Println(sr.sheet)
-
 	if err != nil {
 		return err
 	}
@@ -81,4 +79,14 @@ func (sr *SheetRepository) Update(db *sqlx.DB, os *entities.SheetUpdate, id uuid
 	}
 
 	return us, nil
+}
+
+func (sr *SheetRepository) Delete(db *sqlx.DB, id uuid.UUID) error {
+	_, err := db.Exec("DELETE FROM sheets WHERE id=$1", id)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

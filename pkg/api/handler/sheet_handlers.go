@@ -111,3 +111,17 @@ func (sh *SheetHandler) PatchSheetHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, su)
 }
+
+func (sh *SheetHandler) DeleteSheetHandler(c echo.Context) error {
+	s := new(entities.Sheet)
+	id, err := uuid.Parse(c.Param("id"))
+
+	if err != nil {
+		return err
+	}
+
+	sr := repository.NewSheetRepository(s)
+	sr.Delete(sh.storage, id)
+
+	return c.NoContent(http.StatusOK)
+}
