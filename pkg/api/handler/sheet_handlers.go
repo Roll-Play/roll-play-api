@@ -23,7 +23,7 @@ func NewSheetHandler(storage *sqlx.DB) *SheetHandler {
 	}
 }
 
-func (sh *SheetHandler) PostSheetHandler(c echo.Context) error {
+func (sh *SheetHandler) CreateSheetHandler(c echo.Context) error {
 	s := new(entities.Sheet)
 	if err := c.Bind(s); err != nil {
 		return err
@@ -46,9 +46,9 @@ func (sh *SheetHandler) GetSheetHandler(c echo.Context) error {
 	}
 
 	sr := repository.NewSheetRepository(s)
-	errf := sr.FindById(sh.storage, id)
-	if errf != nil {
-		return errf
+	err = sr.FindById(sh.storage, id)
+	if err != nil {
+		return err
 	}
 
 	return c.JSON(http.StatusOK, s)
@@ -61,15 +61,14 @@ func (sh *SheetHandler) GetSheetListHandler(c echo.Context) error {
 		return err
 	}
 
-	p, errp := strconv.Atoi(c.QueryParams().Get("page"))
-	sz, errs := strconv.Atoi(c.QueryParams().Get("size"))
-
-	if errp != nil {
-		return errp
+	p, err := strconv.Atoi(c.QueryParams().Get("page"))
+	if err != nil {
+		return err
 	}
 
-	if errs != nil {
-		return errs
+	sz, err := strconv.Atoi(c.QueryParams().Get("size"))
+	if err != nil {
+		return err
 	}
 
 	sr := repository.NewSheetRepository(s)
@@ -82,13 +81,13 @@ func (sh *SheetHandler) GetSheetListHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, sl)
 }
 
-func (sh *SheetHandler) PatchSheetHandler(c echo.Context) error {
+func (sh *SheetHandler) UpdateSheetHandler(c echo.Context) error {
 	s := new(entities.Sheet)
 	os := new(entities.SheetUpdate)
-	id, errp := uuid.Parse(c.Param("id"))
+	id, err := uuid.Parse(c.Param("id"))
 
-	if errp != nil {
-		return errp
+	if err != nil {
+		return err
 	}
 
 	if err := c.Bind(os); err != nil {
@@ -97,16 +96,16 @@ func (sh *SheetHandler) PatchSheetHandler(c echo.Context) error {
 	}
 
 	sr := repository.NewSheetRepository(s)
-	err := sr.FindById(sh.storage, id)
+	err = sr.FindById(sh.storage, id)
 
 	if err != nil {
 		return err
 	}
 
-	su, erru := sr.Update(sh.storage, os, id)
+	su, err := sr.Update(sh.storage, os, id)
 
-	if erru != nil {
-		return erru
+	if err != nil {
+		return err
 	}
 
 	return c.JSON(http.StatusOK, su)
@@ -123,5 +122,5 @@ func (sh *SheetHandler) DeleteSheetHandler(c echo.Context) error {
 	sr := repository.NewSheetRepository(s)
 	sr.Delete(sh.storage, id)
 
-	return c.NoContent(http.StatusOK)
+	return c.NoContent(http.StatusNoContent)
 }

@@ -46,10 +46,10 @@ func setUserRoutes(server *echo.Echo, storage *sqlx.DB) {
 
 func setSheetRoutes(server *echo.Echo, storage *sqlx.DB) {
 	sh := handler.NewSheetHandler(storage)
-	server.POST("/sheet", sh.PostSheetHandler)
+	server.POST("/sheet", sh.CreateSheetHandler)
 	server.GET("/sheet", sh.GetSheetListHandler)
 	server.GET("/sheet/:id", sh.GetSheetHandler)
-	server.PATCH("/sheet/:id", sh.PatchSheetHandler)
+	server.PATCH("/sheet/:id", sh.UpdateSheetHandler)
 	server.DELETE("/sheet/:id", sh.DeleteSheetHandler)
 }
 

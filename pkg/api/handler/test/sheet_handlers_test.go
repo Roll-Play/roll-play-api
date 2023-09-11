@@ -60,20 +60,22 @@ func (suite *SheetHandlersSuite) TestPostSheetHandlerSuccess() {
 	var jsonRes entities.Sheet
 
 	sh := handler.NewSheetHandler(suite.db)
-	err := sh.PostSheetHandler(c)
+	err := sh.CreateSheetHandler(c)
 
-	assert.NoError(suite.T(), err)
-	assert.Equal(suite.T(), http.StatusCreated, rec.Code)
+	t := suite.T()
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, rec.Code)
 
 	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
 
 	var sheet entities.Sheet
 	suite.db.Get(&sheet, "SELECT name, description, properties, background FROM sheets WHERE id=$1", jsonRes.Id)
 
-	assert.Equal(suite.T(), jsonRes.Name, sheet.Name)
-	assert.Equal(suite.T(), jsonRes.Description, sheet.Description)
-	assert.Equal(suite.T(), jsonRes.Properties, sheet.Properties)
-	assert.Equal(suite.T(), jsonRes.Background, sheet.Background)
+	assert.Equal(t, jsonRes.Name, sheet.Name)
+	assert.Equal(t, jsonRes.Description, sheet.Description)
+	assert.Equal(t, jsonRes.Properties, sheet.Properties)
+	assert.Equal(t, jsonRes.Background, sheet.Background)
 }
 
 func (suite *SheetHandlersSuite) TestGetSheetHandlerSuccess() {
@@ -87,7 +89,8 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerSuccess() {
 								RETURNING id, name, description, properties, background`,
 		sheet.Name, sheet.Description, sheet.Properties, sheet.Background)
 
-	assert.NoError(suite.T(), err)
+	t := suite.T()
+	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -102,15 +105,15 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerSuccess() {
 	sh := handler.NewSheetHandler(suite.db)
 	errg := sh.GetSheetHandler(c)
 
-	assert.NoError(suite.T(), errg)
-	assert.Equal(suite.T(), http.StatusOK, rec.Code)
+	assert.NoError(t, errg)
+	assert.Equal(t, http.StatusOK, rec.Code)
 
 	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
 
-	assert.Equal(suite.T(), jsonRes.Name, sheet.Name)
-	assert.Equal(suite.T(), jsonRes.Description, sheet.Description)
-	assert.Equal(suite.T(), jsonRes.Properties, sheet.Properties)
-	assert.Equal(suite.T(), jsonRes.Background, sheet.Background)
+	assert.Equal(t, jsonRes.Name, sheet.Name)
+	assert.Equal(t, jsonRes.Description, sheet.Description)
+	assert.Equal(t, jsonRes.Properties, sheet.Properties)
+	assert.Equal(t, jsonRes.Background, sheet.Background)
 }
 
 func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
@@ -133,8 +136,9 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 								RETURNING id, name, description, properties, background`,
 		sheet2.Name, sheet2.Description, sheet2.Properties, sheet2.Background)
 
-	assert.NoError(suite.T(), err)
-	assert.NoError(suite.T(), err2)
+	t := suite.T()
+	assert.NoError(t, err)
+	assert.NoError(t, err2)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -150,20 +154,20 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 	sh := handler.NewSheetHandler(suite.db)
 	errg := sh.GetSheetListHandler(c)
 
-	assert.NoError(suite.T(), errg)
-	assert.Equal(suite.T(), http.StatusOK, rec.Code)
+	assert.NoError(t, errg)
+	assert.Equal(t, http.StatusOK, rec.Code)
 
 	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
 
-	assert.Equal(suite.T(), jsonRes[0].Name, sheet.Name)
-	assert.Equal(suite.T(), jsonRes[0].Description, sheet.Description)
-	assert.Equal(suite.T(), jsonRes[0].Properties, sheet.Properties)
-	assert.Equal(suite.T(), jsonRes[0].Background, sheet.Background)
+	assert.Equal(t, jsonRes[0].Name, sheet.Name)
+	assert.Equal(t, jsonRes[0].Description, sheet.Description)
+	assert.Equal(t, jsonRes[0].Properties, sheet.Properties)
+	assert.Equal(t, jsonRes[0].Background, sheet.Background)
 
-	assert.Equal(suite.T(), jsonRes[1].Name, sheet2.Name)
-	assert.Equal(suite.T(), jsonRes[1].Description, sheet2.Description)
-	assert.Equal(suite.T(), jsonRes[1].Properties, sheet2.Properties)
-	assert.Equal(suite.T(), jsonRes[1].Background, sheet2.Background)
+	assert.Equal(t, jsonRes[1].Name, sheet2.Name)
+	assert.Equal(t, jsonRes[1].Description, sheet2.Description)
+	assert.Equal(t, jsonRes[1].Properties, sheet2.Properties)
+	assert.Equal(t, jsonRes[1].Background, sheet2.Background)
 }
 
 func (suite *SheetHandlersSuite) TestPatchSheetHandlerSuccess() {
@@ -177,7 +181,8 @@ func (suite *SheetHandlersSuite) TestPatchSheetHandlerSuccess() {
 								RETURNING id`,
 		sheet.Name, sheet.Description, sheet.Properties, sheet.Background)
 
-	assert.NoError(suite.T(), err)
+	t := suite.T()
+	assert.NoError(t, err)
 
 	us := entities.Sheet{
 		Name:        "New Name",
@@ -186,7 +191,7 @@ func (suite *SheetHandlersSuite) TestPatchSheetHandlerSuccess() {
 	}
 
 	requestBody, errm := json.Marshal(us)
-	assert.NoError(suite.T(), errm)
+	assert.NoError(t, errm)
 
 	req := httptest.NewRequest(http.MethodPatch, "/", bytes.NewBuffer(requestBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -199,26 +204,26 @@ func (suite *SheetHandlersSuite) TestPatchSheetHandlerSuccess() {
 	var jsonRes entities.Sheet
 
 	sh := handler.NewSheetHandler(suite.db)
-	errg := sh.PatchSheetHandler(c)
+	errg := sh.UpdateSheetHandler(c)
 
 	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
 
-	assert.NoError(suite.T(), errg)
-	assert.Equal(suite.T(), http.StatusOK, rec.Code)
+	assert.NoError(t, errg)
+	assert.Equal(t, http.StatusOK, rec.Code)
 
 	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
 
-	assert.Equal(suite.T(), jsonRes.Name, us.Name)
-	assert.Equal(suite.T(), jsonRes.Description, us.Description)
-	assert.Equal(suite.T(), jsonRes.Properties, us.Properties)
-	assert.Equal(suite.T(), jsonRes.Background, sheet.Background)
+	assert.Equal(t, jsonRes.Name, us.Name)
+	assert.Equal(t, jsonRes.Description, us.Description)
+	assert.Equal(t, jsonRes.Properties, us.Properties)
+	assert.Equal(t, jsonRes.Background, sheet.Background)
 
 	suite.db.Get(&jsonRes, "SELECT name, description, properties, background FROM sheets WHERE id=$1", jsonRes.Id)
 
-	assert.Equal(suite.T(), jsonRes.Name, us.Name)
-	assert.Equal(suite.T(), jsonRes.Description, us.Description)
-	assert.Equal(suite.T(), jsonRes.Properties, us.Properties)
-	assert.Equal(suite.T(), jsonRes.Background, sheet.Background)
+	assert.Equal(t, jsonRes.Name, us.Name)
+	assert.Equal(t, jsonRes.Description, us.Description)
+	assert.Equal(t, jsonRes.Properties, us.Properties)
+	assert.Equal(t, jsonRes.Background, sheet.Background)
 }
 
 func (suite *SheetHandlersSuite) TestDeleteSheetHandlerSuccess() {
@@ -232,7 +237,8 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerSuccess() {
 								RETURNING id, name, description, properties, background`,
 		sheet.Name, sheet.Description, sheet.Properties, sheet.Background)
 
-	assert.NoError(suite.T(), err)
+	t := suite.T()
+	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -245,13 +251,13 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerSuccess() {
 	sh := handler.NewSheetHandler(suite.db)
 	errg := sh.DeleteSheetHandler(c)
 
-	assert.NoError(suite.T(), errg)
-	assert.Equal(suite.T(), http.StatusOK, rec.Code)
+	assert.NoError(t, errg)
+	assert.Equal(t, http.StatusOK, rec.Code)
 
 	test := new(entities.Sheet)
 	errex := suite.db.Get(test, "SELECT name, description, properties, background FROM sheets WHERE id=$1", sheet.Id)
 
-	assert.Error(suite.T(), errex)
+	assert.Error(t, errex)
 
 }
 
