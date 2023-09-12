@@ -18,7 +18,7 @@ type Sheet struct {
 	DeletedAt   sql.NullTime `db:"deleted_at"`
 }
 
-type SheetUpdate struct {
+type SheetDto struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Properties  string `json:"properties"`
