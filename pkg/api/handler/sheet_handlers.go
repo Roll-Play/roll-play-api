@@ -24,29 +24,28 @@ func NewSheetHandler(storage *sqlx.DB) *SheetHandler {
 }
 
 func (sh *SheetHandler) CreateSheetHandler(c echo.Context) error {
-	s := new(entities.Sheet)
-	if err := c.Bind(s); err != nil {
+	sd := new(entities.SheetDto)
+	if err := c.Bind(sd); err != nil {
 		return err
 	}
 
-	sr := repository.NewSheetRepository(s)
-	err := sr.Create(sh.storage)
+	sr := repository.NewSheetRepository(sh.storage)
+	ns, err := sr.Create(sd)
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusCreated, s)
+	return c.JSON(http.StatusCreated, ns)
 }
 
 func (sh *SheetHandler) GetSheetHandler(c echo.Context) error {
-	s := new(entities.Sheet)
 	id, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
 		return err
 	}
 
-	sr := repository.NewSheetRepository(s)
-	err = sr.FindById(sh.storage, id)
+	sr := repository.NewSheetRepository(sh.storage)
+	s, err := sr.FindById(id)
 	if err != nil {
 		return err
 	}
@@ -55,12 +54,6 @@ func (sh *SheetHandler) GetSheetHandler(c echo.Context) error {
 }
 
 func (sh *SheetHandler) GetSheetListHandler(c echo.Context) error {
-	s := new(entities.Sheet)
-
-	if err := c.Bind(s); err != nil {
-		return err
-	}
-
 	p, err := strconv.Atoi(c.QueryParams().Get("page"))
 	if err != nil {
 		return err
@@ -71,8 +64,8 @@ func (sh *SheetHandler) GetSheetListHandler(c echo.Context) error {
 		return err
 	}
 
-	sr := repository.NewSheetRepository(s)
-	sl, err := sr.FindAll(sh.storage, p, sz)
+	sr := repository.NewSheetRepository(sh.storage)
+	sl, err := sr.FindAll(p, sz)
 
 	if err != nil {
 		return err
@@ -82,8 +75,7 @@ func (sh *SheetHandler) GetSheetListHandler(c echo.Context) error {
 }
 
 func (sh *SheetHandler) UpdateSheetHandler(c echo.Context) error {
-	s := new(entities.Sheet)
-	os := new(entities.SheetUpdate)
+	os := new(entities.SheetDto)
 	id, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
@@ -95,14 +87,14 @@ func (sh *SheetHandler) UpdateSheetHandler(c echo.Context) error {
 		return err
 	}
 
-	sr := repository.NewSheetRepository(s)
-	err = sr.FindById(sh.storage, id)
+	sr := repository.NewSheetRepository(sh.storage)
+	_, err = sr.FindById(id)
 
 	if err != nil {
 		return err
 	}
 
-	su, err := sr.Update(sh.storage, os, id)
+	su, err := sr.Update(os, id)
 
 	if err != nil {
 		return err
@@ -112,15 +104,14 @@ func (sh *SheetHandler) UpdateSheetHandler(c echo.Context) error {
 }
 
 func (sh *SheetHandler) DeleteSheetHandler(c echo.Context) error {
-	s := new(entities.Sheet)
 	id, err := uuid.Parse(c.Param("id"))
 
 	if err != nil {
 		return err
 	}
 
-	sr := repository.NewSheetRepository(s)
-	sr.Delete(sh.storage, id)
+	sr := repository.NewSheetRepository(sh.storage)
+	sr.Delete(id)
 
 	return c.NoContent(http.StatusNoContent)
 }
