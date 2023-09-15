@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Roll-play/roll-play-backend/pkg/entities"
+	"github.com/Roll-play/roll-play-backend/pkg/errors"
 	repository "github.com/Roll-play/roll-play-backend/pkg/repositories"
 	"github.com/Roll-play/roll-play-backend/pkg/utils"
 	"github.com/google/uuid"
@@ -36,8 +37,9 @@ func (uh *UserHandler) SignUpHandler(c echo.Context) error {
 	u := new(entities.User)
 
 	if err := c.Bind(u); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": err.Error(),
+		return c.JSON(http.StatusInternalServerError, errors.Error{
+			Error:   fmt.Sprintf(errors.InternalServerErrorMessage, err.Error()),
+			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
@@ -46,33 +48,38 @@ func (uh *UserHandler) SignUpHandler(c echo.Context) error {
 	emailInUse, err := ur.FindByEmail(u.Email)
 
 	if err != nil && !(err.Error() == sql.ErrNoRows.Error()) {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": fmt.Sprintf("something went wrong: %v", err),
+		return c.JSON(http.StatusInternalServerError, errors.Error{
+			Error:   fmt.Sprintf(errors.InternalServerErrorMessage, err.Error()),
+			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 	if emailInUse != nil {
-		return c.JSON(http.StatusConflict, map[string]string{
-			"error": "e-mail already in use",
+		return c.JSON(http.StatusConflict, errors.Error{
+			Error:   "e-mail already in use",
+			Message: http.StatusText(http.StatusConflict),
 		})
 	}
 	usernameInUse, err := ur.FindByUsername(u.Username)
 
 	if err != nil && !(err.Error() == sql.ErrNoRows.Error()) {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": fmt.Sprintf("something went wrong: %v", err),
+		return c.JSON(http.StatusInternalServerError, errors.Error{
+			Error:   fmt.Sprintf(errors.InternalServerErrorMessage, err.Error()),
+			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
 	if usernameInUse != nil {
-		return c.JSON(http.StatusConflict, map[string]string{
-			"error": "username already in use",
+		return c.JSON(http.StatusConflict, errors.Error{
+			Error:   "username already in use",
+			Message: http.StatusText(http.StatusConflict),
 		})
 	}
 	password, err := utils.HashPassword(u.Password)
 
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "something went wrong",
+		return c.JSON(http.StatusInternalServerError, errors.Error{
+			Error:   "something went wrong",
+			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
@@ -97,8 +104,9 @@ func (uh *UserHandler) LoginHandler(c echo.Context) error {
 	r := new(entities.User)
 
 	if err := c.Bind(r); err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": err.Error(),
+		c.JSON(http.StatusInternalServerError, errors.Error{
+			Error:   fmt.Sprintf(errors.InternalServerErrorMessage, err.Error()),
+			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
@@ -109,30 +117,34 @@ func (uh *UserHandler) LoginHandler(c echo.Context) error {
 	u, err := ur.FindByEmail(r.Email)
 
 	if err != nil && !(err.Error() == sql.ErrNoRows.Error()) {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": fmt.Sprintf("something went wrong: %v", err),
+		return c.JSON(http.StatusInternalServerError, errors.Error{
+			Error:   fmt.Sprintf(errors.InternalServerErrorMessage, err.Error()),
+			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
 	if u == nil {
-		return c.JSON(http.StatusNotFound, map[string]string{
-			"error": "user not found",
+		return c.JSON(http.StatusNotFound, errors.Error{
+			Error:   "user not found",
+			Message: http.StatusText(http.StatusNotFound),
 		})
 	}
 
 	err = utils.ComparePassword(plaintext, u.Password)
 
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{
-			"error": "credentials don't match",
+		return c.JSON(http.StatusUnauthorized, errors.Error{
+			Error:   "credentials don't match",
+			Message: http.StatusText(http.StatusUnauthorized),
 		})
 	}
 
 	token, err := utils.CreateJWT(u.Id, 60*60*1000*24)
 
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": err.Error(),
+		return c.JSON(http.StatusInternalServerError, errors.Error{
+			Error:   fmt.Sprintf(errors.InternalServerErrorMessage, err.Error()),
+			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
