@@ -18,15 +18,20 @@ jobs:
         with:
           go-version: "1.20"
 
-      - name: Ensure SSH Host Key is Cached
-        run: ssh-keyscan -H ${{ secrets.SSH_HOST_ENV }} >> ~/.ssh/known_hosts
-
       - name: Run deploy script
-        run: |
-          chmod +x ./scripts/deploy.sh
-          ./scripts/deploy.sh
         env:
           SSH_KEY_ENV: ${{ secrets.SSH_KEY_ENV }}
           SSH_USER_ENV: ${{ secrets.SSH_USER_ENV }}
           SSH_HOST_ENV: ${{ secrets.SSH_HOST_ENV }}
           REMOTE_DIR_ENV: ${{ secrets.REMOTE_DIR_ENV }}
+      run: |
+        echo "$SSH_KEY_ENV" > private_key && chmod 600 private_key
+        ssh -o StrictHostKeyChecking=no -i private_key ${SSH_USER_ENV}@${SSH_HOST_ENV} '
+          cd /roll-play-api &&
+          git checkout main &&
+          git fetch --all &&
+          git reset --hard origin/main &&
+          git pull origin main &&
+          make build &&
+          nohup ./bin/app > /dev/null 2>&1 &
+        '
