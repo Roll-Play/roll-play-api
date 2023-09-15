@@ -1,0 +1,29 @@
+name: Deploy
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  update_and_run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+
+      - name: Run deploy script
+        run: |
+          chmod +x ./scripts/deploy.sh
+          ./scripts/deploy.sh
+        env:
+          SSH_KEY_ENV: ${{ secrets.SSH_KEY_ENV }}
+          SSH_USER_ENV: ${{ secrets.SSH_USER_ENV }}
+          SSH_HOST_ENV: ${{ secrets.SSH_HOST_ENV }}
+          REMOTE_DIR_ENV: ${{ secrets.REMOTE_DIR_ENV }}
