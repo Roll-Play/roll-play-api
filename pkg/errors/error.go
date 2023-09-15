@@ -1,4 +1,6 @@
-package error
+package errors
+
+const InternalServerErrorMessage = "something went wrong: %v"
 
 type Error struct {
 	Error   string `json:"error"`

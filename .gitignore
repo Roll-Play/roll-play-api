@@ -1,3 +1,6 @@
 .env
 .vscode
 /bin
+.terraform/
+terraform.tfstate.backup
+terraform.tfstate

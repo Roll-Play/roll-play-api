@@ -45,7 +45,7 @@ func (suite *UserHandlersSuite) TearDownTest() {
 	suite.db.Close()
 }
 
-func (suite *UserHandlersSuite) TestUserHandlerSuccess() {
+func (suite *UserHandlersSuite) TestUserHandlerSignUpSuccess() {
 	requestBody := []byte(`{
 				"username": "fizi",
 				"email": "fizi@gmail.com",
@@ -62,19 +62,178 @@ func (suite *UserHandlersSuite) TestUserHandlerSuccess() {
 	uh := handler.NewUserHandler(suite.db)
 	err := uh.SignUpHandler(c)
 
-	assert.NoError(suite.T(), err)
-	assert.Equal(suite.T(), http.StatusCreated, rec.Code)
+	t := suite.T()
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, rec.Code)
 
 	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
 
 	var user entities.User
-	suite.db.Get(&user, "SELECT id, password, email, username FROM users WHERE id=$1", jsonRes.Id)
+	err = suite.db.Get(&user, "SELECT id, password, email, username FROM users WHERE id=$1", jsonRes.Id)
 
-	assert.Equal(suite.T(), jsonRes.Username, user.Username)
-	assert.Equal(suite.T(), jsonRes.Email, user.Email)
+	assert.NoError(t, err)
+	assert.Equal(t, jsonRes.Username, user.Username)
+	assert.Equal(t, jsonRes.Email, user.Email)
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte("123123"))
-	assert.NoError(suite.T(), err)
+
+	assert.NoError(t, err)
+}
+
+func (suite *UserHandlersSuite) TestUserHandlerSingUpEmailInUse() {
+	requestBody := []byte(`{
+		"username": "fizi",
+		"email": "fizi@gmail.com",
+		"password": "123123"
+	}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/user", bytes.NewBuffer(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	c := suite.app.Server.NewContext(req, rec)
+	var jsonRes map[string]string
+
+	uh := handler.NewUserHandler(suite.db)
+	_, err := suite.db.Exec("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", "fizi2", "fizi@gmail.com", "123123")
+
+	t := suite.T()
+
+	assert.NoError(t, err)
+
+	err = uh.SignUpHandler(c)
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusConflict, rec.Code)
+
+	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
+
+	assert.Equal(t, "e-mail already in use", jsonRes["error"])
+}
+
+func (suite *UserHandlersSuite) TestUserHandlerSingUpUsernameInUse() {
+	requestBody := []byte(`{
+		"username": "fizi",
+		"email": "fizi@gmail.com",
+		"password": "123123"
+	}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/user", bytes.NewBuffer(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	c := suite.app.Server.NewContext(req, rec)
+	var jsonRes map[string]string
+
+	uh := handler.NewUserHandler(suite.db)
+	suite.db.Exec("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", "fizi", "fizi2@gmail.com", "123123")
+
+	err := uh.SignUpHandler(c)
+
+	t := suite.T()
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusConflict, rec.Code)
+
+	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
+
+	assert.Equal(t, "username already in use", jsonRes["error"])
+}
+
+func (suite *UserHandlersSuite) TestUserHandlerLoginSuccess() {
+	requestBody := []byte(`{
+		"email": "fizi@gmail.com",
+		"password": "123123"
+	}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	c := suite.app.Server.NewContext(req, rec)
+	var jsonRes map[string]string
+
+	hash, _ := utils.HashPassword("123123")
+	uh := handler.NewUserHandler(suite.db)
+	suite.db.Exec("INSERT INTO users (username, email, password, is_active) VALUES ($1, $2, $3, $4)", "fizi", "fizi@gmail.com", hash, true)
+
+	err := uh.LoginHandler(c)
+
+	t := suite.T()
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
+
+	_, ok := jsonRes["token"]
+
+	assert.Equal(t, true, ok)
+}
+
+func (suite *UserHandlersSuite) TestUserHandlerLoginWrongPassword() {
+	requestBody := []byte(`{
+		"email": "fizi@gmail.com",
+		"password": "222222"
+	}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	c := suite.app.Server.NewContext(req, rec)
+	var jsonRes map[string]string
+
+	hash, _ := utils.HashPassword("123123")
+	uh := handler.NewUserHandler(suite.db)
+	suite.db.Exec("INSERT INTO users (username, email, password, is_active) VALUES ($1, $2, $3, $4)", "fizi", "fizi@gmail.com", hash, true)
+
+	err := uh.LoginHandler(c)
+
+	t := suite.T()
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+
+	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
+
+	message, ok := jsonRes["error"]
+
+	assert.Equal(t, true, ok)
+	assert.Equal(t, "credentials don't match", message)
+}
+
+func (suite *UserHandlersSuite) TestUserHandlerLoginWrongEmail() {
+	requestBody := []byte(`{
+		"email": "fizi2@gmail.com",
+		"password": "123123"
+	}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	c := suite.app.Server.NewContext(req, rec)
+	var jsonRes map[string]string
+
+	hash, _ := utils.HashPassword("123123")
+	uh := handler.NewUserHandler(suite.db)
+	suite.db.Exec("INSERT INTO users (username, email, password, is_active) VALUES ($1, $2, $3, $4)", "fizi", "fizi@gmail.com", hash, true)
+
+	err := uh.LoginHandler(c)
+
+	t := suite.T()
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+
+	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
+
+	message, ok := jsonRes["error"]
+
+	assert.Equal(t, true, ok)
+	assert.Equal(t, "user not found", message)
 }
 
 func TestUserHandlersSuite(t *testing.T) {
