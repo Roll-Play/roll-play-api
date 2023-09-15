@@ -172,6 +172,70 @@ func (suite *UserHandlersSuite) TestUserHandlerLoginSuccess() {
 	assert.Equal(t, true, ok)
 }
 
+func (suite *UserHandlersSuite) TestUserHandlerLoginWrongPassword() {
+	requestBody := []byte(`{
+		"email": "fizi@gmail.com",
+		"password": "222222"
+	}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	c := suite.app.Server.NewContext(req, rec)
+	var jsonRes map[string]string
+
+	hash, _ := utils.HashPassword("123123")
+	uh := handler.NewUserHandler(suite.db)
+	suite.db.Exec("INSERT INTO users (username, email, password, is_active) VALUES ($1, $2, $3, $4)", "fizi", "fizi@gmail.com", hash, true)
+
+	err := uh.LoginHandler(c)
+
+	t := suite.T()
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+
+	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
+
+	message, ok := jsonRes["error"]
+
+	assert.Equal(t, true, ok)
+	assert.Equal(t, "credentials don't match", message)
+}
+
+func (suite *UserHandlersSuite) TestUserHandlerLoginWrongEmail() {
+	requestBody := []byte(`{
+		"email": "fizi2@gmail.com",
+		"password": "123123"
+	}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	c := suite.app.Server.NewContext(req, rec)
+	var jsonRes map[string]string
+
+	hash, _ := utils.HashPassword("123123")
+	uh := handler.NewUserHandler(suite.db)
+	suite.db.Exec("INSERT INTO users (username, email, password, is_active) VALUES ($1, $2, $3, $4)", "fizi", "fizi@gmail.com", hash, true)
+
+	err := uh.LoginHandler(c)
+
+	t := suite.T()
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+
+	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
+
+	message, ok := jsonRes["error"]
+
+	assert.Equal(t, true, ok)
+	assert.Equal(t, "user not found", message)
+}
+
 func TestUserHandlersSuite(t *testing.T) {
 	suite.Run(t, new(UserHandlersSuite))
 }
