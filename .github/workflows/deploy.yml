@@ -18,20 +18,10 @@ jobs:
         with:
           go-version: "1.20"
 
-      - name: Run deploy script
+      - name: Deploy to Server
+        uses: easingthemes/ssh-deploy@main
         env:
-          SSH_KEY_ENV: ${{ secrets.deploy_key }}
-          SSH_USER_ENV: ${{ secrets.SSH_USER_ENV }}
-          SSH_HOST_ENV: ${{ secrets.SSH_HOST_ENV }}
-          REMOTE_DIR_ENV: ${{ secrets.REMOTE_DIR_ENV }}
-        run: |
-          echo "$SSH_KEY_ENV" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${SSH_USER_ENV}@${SSH_HOST_ENV} '
-            cd /roll-play-api &&
-            git checkout main &&
-            git fetch --all &&
-            git reset --hard origin/main &&
-            git pull origin main &&
-            make build &&
-            nohup ./bin/app > /dev/null 2>&1 &
-          '
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY_ENV }}
+          REMOTE_HOST: ${{ secrets.SSH_HOST_ENV }}
+          REMOTE_USER: ${{ secrets.SSH_USER_ENV }}
+          TARGET: ${{ secrets.REMOTE_DIR_ENV }}
