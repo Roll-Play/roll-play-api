@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  update_and_run:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +21,7 @@ jobs:
       - name: Deploy to Server
         uses: easingthemes/ssh-deploy@main
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.deploy_key }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY_ENV }}
           REMOTE_HOST: ${{ secrets.SSH_HOST_ENV }}
           REMOTE_USER: ${{ secrets.SSH_USER_ENV }}
           TARGET: ${{ secrets.REMOTE_DIR_ENV }}
