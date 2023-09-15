@@ -29,10 +29,10 @@ type UserHandlersSuite struct {
 func (suite *UserHandlersSuite) SetupTest() {
 	// Initialize your test environment here.
 	e := echo.New()
-	db, err := utils.SetupTestDB("../../../.env")
+	db, err := utils.SetupTestDB("../../../../.env")
 	assert.NoError(suite.T(), err)
 
-	utils.RunMigrations("file://../../../migrations")
+	utils.RunMigrations("file://../../../../migrations")
 
 	suite.app = &api.Application{
 		Server:  e,
