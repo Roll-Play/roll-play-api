@@ -55,6 +55,7 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
+      - DB_SLL_MODE=${DB_SLL_MODE}
     ports:
       - "${PORT}:${PORT}"
     networks:
