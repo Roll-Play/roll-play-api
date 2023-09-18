@@ -1,4 +1,4 @@
-package errors
+package api_error
 
 const InternalServerErrorMessage = "something went wrong: %v"
 

@@ -41,7 +41,7 @@ func setRoutes(server *echo.Echo, storage *sqlx.DB) {
 
 func setUserRoutes(server *echo.Echo, storage *sqlx.DB) {
 	uh := handler.NewUserHandler(storage)
-	server.POST("/user", uh.SignUpHandler)
+	server.POST("/signup", uh.SignUpHandler)
 	server.POST("/login", uh.LoginHandler)
 }
 
