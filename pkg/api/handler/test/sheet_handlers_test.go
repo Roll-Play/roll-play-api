@@ -5,6 +5,7 @@ import (
 
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,7 +13,9 @@ import (
 	"github.com/Roll-play/roll-play-backend/pkg/api"
 	"github.com/Roll-play/roll-play-backend/pkg/api/handler"
 	"github.com/Roll-play/roll-play-backend/pkg/entities"
+	api_error "github.com/Roll-play/roll-play-backend/pkg/errors"
 	"github.com/Roll-play/roll-play-backend/pkg/utils"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -259,6 +262,60 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerSuccess() {
 
 	assert.Error(t, errex)
 
+}
+
+func (suite *SheetHandlersSuite) TestGetSheetHandlerFail() {
+	t := suite.T()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	ruuid, err := uuid.NewRandom()
+	assert.NoError(t, err)
+
+	c := suite.app.Server.NewContext(req, rec)
+	c.SetPath("/sheet/:id")
+	c.SetParamNames("id")
+	c.SetParamValues(ruuid.String())
+
+	var jsonRes api_error.Error
+
+	sh := handler.NewSheetHandler(suite.db)
+	errg := sh.GetSheetHandler(c)
+	assert.NoError(t, errg)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+
+	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
+
+	assert.Equal(t, jsonRes.Error, http.StatusText(rec.Code))
+	assert.Equal(t, jsonRes.Message, fmt.Sprintf(api_error.NotFound, "id", ruuid))
+}
+
+func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFail() {
+	t := suite.T()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	ruuid, err := uuid.NewRandom()
+	assert.NoError(t, err)
+
+	c := suite.app.Server.NewContext(req, rec)
+	c.SetPath("/sheet/:id")
+	c.SetParamNames("id")
+	c.SetParamValues(ruuid.String())
+
+	var jsonRes api_error.Error
+
+	sh := handler.NewSheetHandler(suite.db)
+	errg := sh.DeleteSheetHandler(c)
+	assert.NoError(t, errg)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+
+	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
+
+	assert.Equal(t, jsonRes.Error, http.StatusText(rec.Code))
+	assert.Equal(t, jsonRes.Message, fmt.Sprintf(api_error.NotFound, "id", ruuid))
 }
 
 func TestSheetHandlersSuite(t *testing.T) {

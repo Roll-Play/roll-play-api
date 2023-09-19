@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 
 	"github.com/Roll-play/roll-play-backend/pkg/entities"
@@ -25,6 +26,7 @@ func (sr *SheetRepository) Create(sheetDto *entities.SheetDto) (*entities.Sheet,
 		sheetDto.Name, sheetDto.Description, sheetDto.Properties, sheetDto.Background)
 
 	if err != nil {
+		log.Println("Error creating record with dto: ", sheetDto)
 		return nil, err
 	}
 
@@ -37,6 +39,7 @@ func (sr *SheetRepository) FindById(id uuid.UUID) (*entities.Sheet, error) {
 	err := sr.db.Get(sheet, "SELECT s.* FROM sheets s WHERE s.id = $1", id)
 
 	if err != nil {
+		log.Println("Error finding record with id: ", id)
 		return nil, err
 	}
 
@@ -47,8 +50,8 @@ func (sr *SheetRepository) FindAll(page int, size int) (*[]entities.Sheet, error
 	r := []entities.Sheet{}
 
 	err := sr.db.Select(&r, "SELECT s.* FROM sheets s ORDER BY s.name LIMIT $1 OFFSET $2", size, page*size)
-
 	if err != nil {
+		log.Println("Error finding records for page with page and size:", page, size)
 		return &r, err
 	}
 
@@ -75,9 +78,10 @@ func (sr *SheetRepository) Update(sheetDto *entities.SheetDto, id uuid.UUID) (*e
 
 	us := new(entities.Sheet)
 	err := sr.db.Get(us, sqlQuery, args...)
-
 	if err != nil {
-		return us, err
+		log.Println("Error updating record with id:", id)
+		log.Println("and dto:", sheetDto)
+		return nil, err
 	}
 
 	return us, nil
@@ -87,6 +91,7 @@ func (sr *SheetRepository) Delete(id uuid.UUID) error {
 	_, err := sr.db.Exec("DELETE FROM sheets WHERE id=$1", id)
 
 	if err != nil {
+		log.Println("Error deleting record with id:", id)
 		return err
 	}
 
