@@ -13,7 +13,7 @@ import (
 	"github.com/Roll-play/roll-play-backend/pkg/api"
 	"github.com/Roll-play/roll-play-backend/pkg/api/handler"
 	"github.com/Roll-play/roll-play-backend/pkg/entities"
-	"github.com/Roll-play/roll-play-backend/pkg/errors"
+	api_error "github.com/Roll-play/roll-play-backend/pkg/errors"
 	"github.com/Roll-play/roll-play-backend/pkg/utils"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -278,7 +278,7 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerFail() {
 	c.SetParamNames("id")
 	c.SetParamValues(ruuid.String())
 
-	var jsonRes errors.Error
+	var jsonRes api_error.Error
 
 	sh := handler.NewSheetHandler(suite.db)
 	errg := sh.GetSheetHandler(c)
@@ -288,7 +288,7 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerFail() {
 	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
 
 	assert.Equal(t, jsonRes.Error, http.StatusText(rec.Code))
-	assert.Equal(t, jsonRes.Message, fmt.Sprintf(errors.NotFound, "id", ruuid))
+	assert.Equal(t, jsonRes.Message, fmt.Sprintf(api_error.NotFound, "id", ruuid))
 }
 
 func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFail() {
@@ -305,7 +305,7 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFail() {
 	c.SetParamNames("id")
 	c.SetParamValues(ruuid.String())
 
-	var jsonRes errors.Error
+	var jsonRes api_error.Error
 
 	sh := handler.NewSheetHandler(suite.db)
 	errg := sh.DeleteSheetHandler(c)
@@ -315,7 +315,7 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFail() {
 	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
 
 	assert.Equal(t, jsonRes.Error, http.StatusText(rec.Code))
-	assert.Equal(t, jsonRes.Message, fmt.Sprintf(errors.NotFound, "id", ruuid))
+	assert.Equal(t, jsonRes.Message, fmt.Sprintf(api_error.NotFound, "id", ruuid))
 }
 
 func TestSheetHandlersSuite(t *testing.T) {
