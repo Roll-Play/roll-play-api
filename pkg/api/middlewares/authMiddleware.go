@@ -11,11 +11,11 @@ import (
 )
 
 func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		authHeader := c.Request().Header.Get("Authorization")
+	return func(context echo.Context) error {
+		authHeader := context.Request().Header.Get("Authorization")
 
 		if authHeader == "" {
-			return c.JSON(http.StatusUnauthorized, api_error.Error{
+			return context.JSON(http.StatusUnauthorized, api_error.Error{
 				Error:   "Missing Authorization header",
 				Message: http.StatusText(http.StatusUnauthorized),
 			})
@@ -33,7 +33,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		})
 
 		if err != nil {
-			return c.JSON(http.StatusUnauthorized, api_error.Error{
+			return context.JSON(http.StatusUnauthorized, api_error.Error{
 				Error:   "Invalid token",
 				Message: http.StatusText(http.StatusUnauthorized),
 			})
@@ -42,17 +42,17 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			user, ok := claims["sub"].(string)
 			if !ok {
-				return c.JSON(http.StatusUnauthorized, api_error.Error{
+				return context.JSON(http.StatusUnauthorized, api_error.Error{
 					Error:   "Invalid token",
 					Message: http.StatusText(http.StatusUnauthorized),
 				})
 			}
 
-			c.Set("user", user)
-			return next(c)
+			context.Set("user", user)
+			return next(context)
 		}
 
-		return c.JSON(http.StatusUnauthorized, api_error.Error{
+		return context.JSON(http.StatusUnauthorized, api_error.Error{
 			Error:   "Invalid token",
 			Message: http.StatusText(http.StatusUnauthorized),
 		})

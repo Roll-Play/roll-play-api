@@ -12,9 +12,9 @@ type UserRepository struct {
 	db *sqlx.DB
 }
 
-func (ur *UserRepository) Create(user entities.User) (*entities.User, error) {
+func (userRepository *UserRepository) Create(user entities.User) (*entities.User, error) {
 
-	row := ur.db.QueryRowx(
+	row := userRepository.db.QueryRowx(
 		"INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email, created_at, updated_at",
 		user.Username,
 		user.Email,
@@ -32,9 +32,9 @@ func (ur *UserRepository) Create(user entities.User) (*entities.User, error) {
 	return u, nil
 }
 
-func (ur *UserRepository) FindByEmail(email string) (*entities.User, error) {
+func (userRepository *UserRepository) FindByEmail(email string) (*entities.User, error) {
 	u := new(entities.User)
-	err := ur.db.Get(u, "SELECT * FROM users WHERE email=$1", email)
+	err := userRepository.db.Get(u, "SELECT * FROM users WHERE email=$1", email)
 
 	if err != nil {
 		return nil, err
@@ -43,9 +43,9 @@ func (ur *UserRepository) FindByEmail(email string) (*entities.User, error) {
 	return u, nil
 }
 
-func (ur *UserRepository) FindByUsername(username string) (*entities.User, error) {
+func (userRepository *UserRepository) FindByUsername(username string) (*entities.User, error) {
 	u := new(entities.User)
-	err := ur.db.Get(u, "SELECT * FROM users where username=$1", username)
+	err := userRepository.db.Get(u, "SELECT * FROM users where username=$1", username)
 
 	if err != nil {
 		return nil, err
@@ -54,9 +54,9 @@ func (ur *UserRepository) FindByUsername(username string) (*entities.User, error
 	return u, nil
 }
 
-func (ur *UserRepository) FindById(id uuid.UUID) (*entities.User, error) {
+func (userRepository *UserRepository) FindById(id uuid.UUID) (*entities.User, error) {
 	u := new(entities.User)
-	err := ur.db.Get(u, "SELECT * FROM users where id=$1", id)
+	err := userRepository.db.Get(u, "SELECT * FROM users where id=$1", id)
 
 	if err != nil {
 		return nil, err
@@ -65,10 +65,10 @@ func (ur *UserRepository) FindById(id uuid.UUID) (*entities.User, error) {
 	return u, nil
 }
 
-func (ur *UserRepository) IsActive(id uuid.UUID) error {
+func (userRepository *UserRepository) IsActive(id uuid.UUID) error {
 	var count int
 
-	err := ur.db.Get(&count, "SELECT COUNT(id) FROM users WHERE id=$1 AND is_active=true", id)
+	err := userRepository.db.Get(&count, "SELECT COUNT(id) FROM users WHERE id=$1 AND is_active=true", id)
 
 	if err != nil {
 		return err

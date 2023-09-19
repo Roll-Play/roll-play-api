@@ -33,65 +33,65 @@ func NewUserHandler(storage *sqlx.DB) *UserHandler {
 	}
 }
 
-func (uh *UserHandler) SignUpHandler(c echo.Context) error {
-	u := new(entities.User)
+func (userHandler *UserHandler) SignUpHandler(context echo.Context) error {
+	user := new(entities.User)
 
-	if err := c.Bind(u); err != nil {
-		return c.JSON(http.StatusInternalServerError, api_error.Error{
+	if err := context.Bind(user); err != nil {
+		return context.JSON(http.StatusInternalServerError, api_error.Error{
 			Error:   fmt.Sprintf(api_error.InternalServerErrorMessage, err.Error()),
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
-	ur := repository.NewUserRepository(uh.storage)
+	userRepository := repository.NewUserRepository(userHandler.storage)
 
-	emailInUse, err := ur.FindByEmail(u.Email)
+	emailInUse, err := userRepository.FindByEmail(user.Email)
 
 	if err != nil && !(err.Error() == sql.ErrNoRows.Error()) {
-		return c.JSON(http.StatusInternalServerError, api_error.Error{
+		return context.JSON(http.StatusInternalServerError, api_error.Error{
 			Error:   fmt.Sprintf(api_error.InternalServerErrorMessage, err.Error()),
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 	if emailInUse != nil {
-		return c.JSON(http.StatusConflict, api_error.Error{
+		return context.JSON(http.StatusConflict, api_error.Error{
 			Error:   "e-mail already in use",
 			Message: http.StatusText(http.StatusConflict),
 		})
 	}
-	usernameInUse, err := ur.FindByUsername(u.Username)
+	usernameInUse, err := userRepository.FindByUsername(user.Username)
 
 	if err != nil && !(err.Error() == sql.ErrNoRows.Error()) {
-		return c.JSON(http.StatusInternalServerError, api_error.Error{
+		return context.JSON(http.StatusInternalServerError, api_error.Error{
 			Error:   fmt.Sprintf(api_error.InternalServerErrorMessage, err.Error()),
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
 	if usernameInUse != nil {
-		return c.JSON(http.StatusConflict, api_error.Error{
+		return context.JSON(http.StatusConflict, api_error.Error{
 			Error:   "username already in use",
 			Message: http.StatusText(http.StatusConflict),
 		})
 	}
-	password, err := utils.HashPassword(u.Password)
+	password, err := utils.HashPassword(user.Password)
 
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, api_error.Error{
+		return context.JSON(http.StatusInternalServerError, api_error.Error{
 			Error:   "something went wrong",
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
-	u.Password = password
+	user.Password = password
 
-	createdUser, err := ur.Create(*u)
+	createdUser, err := userRepository.Create(*user)
 
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusCreated, &UserResponse{
+	return context.JSON(http.StatusCreated, &UserResponse{
 		Id:        createdUser.Id,
 		Username:  createdUser.Username,
 		Email:     createdUser.Email,
@@ -100,55 +100,55 @@ func (uh *UserHandler) SignUpHandler(c echo.Context) error {
 	})
 }
 
-func (uh *UserHandler) LoginHandler(c echo.Context) error {
-	r := new(entities.User)
+func (userHandler *UserHandler) LoginHandler(context echo.Context) error {
+	requestUser := new(entities.User)
 
-	if err := c.Bind(r); err != nil {
-		c.JSON(http.StatusInternalServerError, api_error.Error{
+	if err := context.Bind(requestUser); err != nil {
+		context.JSON(http.StatusInternalServerError, api_error.Error{
 			Error:   fmt.Sprintf(api_error.InternalServerErrorMessage, err.Error()),
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
-	ur := repository.NewUserRepository(uh.storage)
+	userRepository := repository.NewUserRepository(userHandler.storage)
 
-	plaintext := r.Password
+	plaintext := requestUser.Password
 
-	u, err := ur.FindByEmail(r.Email)
+	user, err := userRepository.FindByEmail(requestUser.Email)
 
 	if err != nil && !(err.Error() == sql.ErrNoRows.Error()) {
-		return c.JSON(http.StatusInternalServerError, api_error.Error{
+		return context.JSON(http.StatusInternalServerError, api_error.Error{
 			Error:   fmt.Sprintf(api_error.InternalServerErrorMessage, err.Error()),
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
-	if u == nil {
-		return c.JSON(http.StatusNotFound, api_error.Error{
+	if user == nil {
+		return context.JSON(http.StatusNotFound, api_error.Error{
 			Error:   "user not found",
 			Message: http.StatusText(http.StatusNotFound),
 		})
 	}
 
-	err = utils.ComparePassword(plaintext, u.Password)
+	err = utils.ComparePassword(plaintext, user.Password)
 
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, api_error.Error{
+		return context.JSON(http.StatusUnauthorized, api_error.Error{
 			Error:   "credentials don't match",
 			Message: http.StatusText(http.StatusUnauthorized),
 		})
 	}
 
-	token, err := utils.CreateJWT(u.Id, 60*60*1000*24)
+	token, err := utils.CreateJWT(user.Id, 60*60*1000*24)
 
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, api_error.Error{
+		return context.JSON(http.StatusInternalServerError, api_error.Error{
 			Error:   fmt.Sprintf(api_error.InternalServerErrorMessage, err.Error()),
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{
+	return context.JSON(http.StatusOK, map[string]string{
 		"token": token,
 	})
 }

@@ -28,14 +28,14 @@ type UserHandlersSuite struct {
 
 func (suite *UserHandlersSuite) SetupTest() {
 	// Initialize your test environment here.
-	e := echo.New()
+	server := echo.New()
 	db, err := utils.SetupTestDB("../../../../.env")
 	assert.NoError(suite.T(), err)
 
 	utils.RunMigrations("file://../../../../migrations")
 
 	suite.app = &api.Application{
-		Server:  e,
+		Server:  server,
 		Storage: db,
 	}
 	suite.db = db
@@ -56,11 +56,11 @@ func (suite *UserHandlersSuite) TestUserHandlerSignUpSuccess() {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
-	c := suite.app.Server.NewContext(req, rec)
+	context := suite.app.Server.NewContext(req, rec)
 	var jsonRes handler.UserResponse
 
-	uh := handler.NewUserHandler(suite.db)
-	err := uh.SignUpHandler(c)
+	userHandler := handler.NewUserHandler(suite.db)
+	err := userHandler.SignUpHandler(context)
 
 	t := suite.T()
 
@@ -92,17 +92,17 @@ func (suite *UserHandlersSuite) TestUserHandlerSingUpEmailInUse() {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
-	c := suite.app.Server.NewContext(req, rec)
+	context := suite.app.Server.NewContext(req, rec)
 	var jsonRes map[string]string
 
-	uh := handler.NewUserHandler(suite.db)
+	userHandler := handler.NewUserHandler(suite.db)
 	_, err := suite.db.Exec("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", "fizi2", "fizi@gmail.com", "123123")
 
 	t := suite.T()
 
 	assert.NoError(t, err)
 
-	err = uh.SignUpHandler(c)
+	err = userHandler.SignUpHandler(context)
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusConflict, rec.Code)
@@ -123,13 +123,13 @@ func (suite *UserHandlersSuite) TestUserHandlerSingUpUsernameInUse() {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
-	c := suite.app.Server.NewContext(req, rec)
+	context := suite.app.Server.NewContext(req, rec)
 	var jsonRes map[string]string
 
-	uh := handler.NewUserHandler(suite.db)
+	userHandler := handler.NewUserHandler(suite.db)
 	suite.db.Exec("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", "fizi", "fizi2@gmail.com", "123123")
 
-	err := uh.SignUpHandler(c)
+	err := userHandler.SignUpHandler(context)
 
 	t := suite.T()
 
@@ -151,14 +151,14 @@ func (suite *UserHandlersSuite) TestUserHandlerLoginSuccess() {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
-	c := suite.app.Server.NewContext(req, rec)
+	context := suite.app.Server.NewContext(req, rec)
 	var jsonRes map[string]string
 
 	hash, _ := utils.HashPassword("123123")
-	uh := handler.NewUserHandler(suite.db)
+	userHandler := handler.NewUserHandler(suite.db)
 	suite.db.Exec("INSERT INTO users (username, email, password, is_active) VALUES ($1, $2, $3, $4)", "fizi", "fizi@gmail.com", hash, true)
 
-	err := uh.LoginHandler(c)
+	err := userHandler.LoginHandler(context)
 
 	t := suite.T()
 
@@ -182,14 +182,14 @@ func (suite *UserHandlersSuite) TestUserHandlerLoginWrongPassword() {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
-	c := suite.app.Server.NewContext(req, rec)
+	context := suite.app.Server.NewContext(req, rec)
 	var jsonRes map[string]string
 
 	hash, _ := utils.HashPassword("123123")
-	uh := handler.NewUserHandler(suite.db)
+	userHandler := handler.NewUserHandler(suite.db)
 	suite.db.Exec("INSERT INTO users (username, email, password, is_active) VALUES ($1, $2, $3, $4)", "fizi", "fizi@gmail.com", hash, true)
 
-	err := uh.LoginHandler(c)
+	err := userHandler.LoginHandler(context)
 
 	t := suite.T()
 
@@ -214,14 +214,14 @@ func (suite *UserHandlersSuite) TestUserHandlerLoginWrongEmail() {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
-	c := suite.app.Server.NewContext(req, rec)
+	context := suite.app.Server.NewContext(req, rec)
 	var jsonRes map[string]string
 
 	hash, _ := utils.HashPassword("123123")
-	uh := handler.NewUserHandler(suite.db)
+	userHandler := handler.NewUserHandler(suite.db)
 	suite.db.Exec("INSERT INTO users (username, email, password, is_active) VALUES ($1, $2, $3, $4)", "fizi", "fizi@gmail.com", hash, true)
 
-	err := uh.LoginHandler(c)
+	err := userHandler.LoginHandler(context)
 
 	t := suite.T()
 
