@@ -1,42 +1,88 @@
 package repository
 
 import (
+	"errors"
+
 	"github.com/Roll-play/roll-play-backend/pkg/entities"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
 type UserRepository struct {
-	user *entities.User
+	db *sqlx.DB
 }
 
-func (ur *UserRepository) Create(db *sqlx.DB) error {
+func (ur *UserRepository) Create(user entities.User) (*entities.User, error) {
 
-	err := db.QueryRowx(
-		"INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, created_at, updated_at",
-		ur.user.Username,
-		ur.user.Email,
-		ur.user.Password,
-	).Scan(&ur.user.Id, &ur.user.CreatedAt, &ur.user.UpdatedAt)
+	row := ur.db.QueryRowx(
+		"INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email, created_at, updated_at",
+		user.Username,
+		user.Email,
+		user.Password,
+	)
+
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
+
+	u := new(entities.User)
+
+	row.Scan(&u.Id, &u.Username, &u.Email, &u.CreatedAt, &u.UpdatedAt)
+
+	return u, nil
+}
+
+func (ur *UserRepository) FindByEmail(email string) (*entities.User, error) {
+	u := new(entities.User)
+	err := ur.db.Get(u, "SELECT * FROM users WHERE email=$1", email)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
+func (ur *UserRepository) FindByUsername(username string) (*entities.User, error) {
+	u := new(entities.User)
+	err := ur.db.Get(u, "SELECT * FROM users where username=$1", username)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
+func (ur *UserRepository) FindById(id uuid.UUID) (*entities.User, error) {
+	u := new(entities.User)
+	err := ur.db.Get(u, "SELECT * FROM users where id=$1", id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
+func (ur *UserRepository) IsActive(id uuid.UUID) error {
+	var count int
+
+	err := ur.db.Get(&count, "SELECT COUNT(id) FROM users WHERE id=$1 AND is_active=true", id)
 
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func (ur *UserRepository) FindByEmail(db *sqlx.DB) error {
-	err := db.Get(&ur.user, "SELECT id, email, username, created_at FROM ")
-
-	if err != nil {
-		return err
+	if count < 1 {
+		return errors.New("user is not active")
 	}
 
 	return nil
 }
 
-func NewUserRepository(entity *entities.User) *UserRepository {
+func NewUserRepository(db *sqlx.DB) *UserRepository {
 	return &UserRepository{
-		user: entity,
+		db: db,
 	}
 }

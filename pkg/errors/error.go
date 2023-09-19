@@ -1,4 +1,4 @@
-package errors
+package api_error
 
 type Error struct {
 	Error   string `json:"error"`
@@ -12,4 +12,5 @@ const (
 	ParseError      = "Error parsing %s"
 	QueryParamError = "Query param '%s' error"
 	DbError         = "Error with %s"
+  InternalServerErrorMessage = "something went wrong: %v"
 )
