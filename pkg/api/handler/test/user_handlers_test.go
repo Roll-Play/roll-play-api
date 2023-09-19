@@ -52,7 +52,7 @@ func (suite *UserHandlersSuite) TestUserHandlerSignUpSuccess() {
 				"password": "123123"
 			}`)
 
-	req := httptest.NewRequest(http.MethodPost, "/user", bytes.NewBuffer(requestBody))
+	req := httptest.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer(requestBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
@@ -88,7 +88,7 @@ func (suite *UserHandlersSuite) TestUserHandlerSingUpEmailInUse() {
 		"password": "123123"
 	}`)
 
-	req := httptest.NewRequest(http.MethodPost, "/user", bytes.NewBuffer(requestBody))
+	req := httptest.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer(requestBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
@@ -119,7 +119,7 @@ func (suite *UserHandlersSuite) TestUserHandlerSingUpUsernameInUse() {
 		"password": "123123"
 	}`)
 
-	req := httptest.NewRequest(http.MethodPost, "/user", bytes.NewBuffer(requestBody))
+	req := httptest.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer(requestBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
