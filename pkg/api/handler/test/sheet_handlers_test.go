@@ -288,7 +288,7 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerFail() {
 	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
 
 	assert.Equal(t, jsonRes.Error, http.StatusText(rec.Code))
-	assert.Equal(t, jsonRes.Message, fmt.Sprintf(api_error.NotFound, "id", ruuid))
+	assert.Equal(t, jsonRes.Message, fmt.Sprintf(api_error.NOT_FOUND, "id", ruuid))
 }
 
 func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFail() {
@@ -315,7 +315,7 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFail() {
 	json.Unmarshal(rec.Body.Bytes(), &jsonRes)
 
 	assert.Equal(t, jsonRes.Error, http.StatusText(rec.Code))
-	assert.Equal(t, jsonRes.Message, fmt.Sprintf(api_error.NotFound, "id", ruuid))
+	assert.Equal(t, jsonRes.Message, fmt.Sprintf(api_error.NOT_FOUND, "id", ruuid))
 }
 
 func TestSheetHandlersSuite(t *testing.T) {

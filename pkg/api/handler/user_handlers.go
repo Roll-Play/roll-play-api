@@ -38,7 +38,7 @@ func (uh *UserHandler) SignUpHandler(c echo.Context) error {
 
 	if err := c.Bind(u); err != nil {
 		return c.JSON(http.StatusInternalServerError, api_error.Error{
-			Error:   fmt.Sprintf(api_error.InternalServerErrorMessage, err.Error()),
+			Error:   fmt.Sprintf(api_error.INTERNAL_SERVER_ERROR, err.Error()),
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
@@ -49,7 +49,7 @@ func (uh *UserHandler) SignUpHandler(c echo.Context) error {
 
 	if err != nil && !(err.Error() == sql.ErrNoRows.Error()) {
 		return c.JSON(http.StatusInternalServerError, api_error.Error{
-			Error:   fmt.Sprintf(api_error.InternalServerErrorMessage, err.Error()),
+			Error:   fmt.Sprintf(api_error.INTERNAL_SERVER_ERROR, err.Error()),
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
@@ -63,7 +63,7 @@ func (uh *UserHandler) SignUpHandler(c echo.Context) error {
 
 	if err != nil && !(err.Error() == sql.ErrNoRows.Error()) {
 		return c.JSON(http.StatusInternalServerError, api_error.Error{
-			Error:   fmt.Sprintf(api_error.InternalServerErrorMessage, err.Error()),
+			Error:   fmt.Sprintf(api_error.INTERNAL_SERVER_ERROR, err.Error()),
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
@@ -105,7 +105,7 @@ func (uh *UserHandler) LoginHandler(c echo.Context) error {
 
 	if err := c.Bind(r); err != nil {
 		c.JSON(http.StatusInternalServerError, api_error.Error{
-			Error:   fmt.Sprintf(api_error.InternalServerErrorMessage, err.Error()),
+			Error:   fmt.Sprintf(api_error.INTERNAL_SERVER_ERROR, err.Error()),
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
@@ -118,7 +118,7 @@ func (uh *UserHandler) LoginHandler(c echo.Context) error {
 
 	if err != nil && !(err.Error() == sql.ErrNoRows.Error()) {
 		return c.JSON(http.StatusInternalServerError, api_error.Error{
-			Error:   fmt.Sprintf(api_error.InternalServerErrorMessage, err.Error()),
+			Error:   fmt.Sprintf(api_error.INTERNAL_SERVER_ERROR, err.Error()),
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}
@@ -143,7 +143,7 @@ func (uh *UserHandler) LoginHandler(c echo.Context) error {
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, api_error.Error{
-			Error:   fmt.Sprintf(api_error.InternalServerErrorMessage, err.Error()),
+			Error:   fmt.Sprintf(api_error.INTERNAL_SERVER_ERROR, err.Error()),
 			Message: http.StatusText(http.StatusInternalServerError),
 		})
 	}

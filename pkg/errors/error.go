@@ -13,19 +13,19 @@ type Error struct {
 }
 
 const (
-	NotFound                   = "Not found with %s: %s"
-	DtoError                   = "Error with Dto"
-	SavingError                = "Error saving %s with values %s"
-	ParseError                 = "Error parsing %s"
-	QueryParamError            = "Query param '%s' error"
-	DbError                    = "Error with %s"
-	InternalServerErrorMessage = "something went wrong: %v"
+	NOT_FOUND             = "Not found with %s: %s"
+	DTO_ERROR             = "Error with Dto"
+	SAVING_ERROR          = "Error saving %s with values %s"
+	PARSE_ERROR           = "Error parsing %s"
+	QUERY_PARAM_ERROR     = "Query param '%s' error"
+	DB_ERROR              = "Error with %s"
+	INTERNAL_SERVER_ERROR = "Something went wrong: %v"
 )
 
-func CustomError(c echo.Context, https int, message string, args ...any) error {
-	errs := Error{
+func CustomError(context echo.Context, https int, message string, args ...any) error {
+	newError := Error{
 		Error:   http.StatusText(https),
 		Message: fmt.Sprintf(message, args...),
 	}
-	return c.JSON(https, errs)
+	return context.JSON(https, newError)
 }
