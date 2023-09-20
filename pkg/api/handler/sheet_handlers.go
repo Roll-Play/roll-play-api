@@ -24,105 +24,105 @@ func NewSheetHandler(storage *sqlx.DB) *SheetHandler {
 	}
 }
 
-func (sh *SheetHandler) CreateSheetHandler(c echo.Context) error {
-	sd := new(entities.SheetDto)
-	if err := c.Bind(sd); err != nil {
+func (sheetHandler *SheetHandler) CreateSheetHandler(context echo.Context) error {
+	sheetDto := new(entities.SheetDto)
+	if err := context.Bind(sheetDto); err != nil {
 		log.Println("Error binding body: ", err)
-		return api_error.CustomError(c, http.StatusBadRequest, api_error.DtoError)
+		return api_error.CustomError(context, http.StatusBadRequest, api_error.DTO_ERROR)
 	}
 
-	sr := repository.NewSheetRepository(sh.storage)
-	ns, err := sr.Create(sd)
+	sheetRepository := repository.NewSheetRepository(sheetHandler.storage)
+	savedSheet, err := sheetRepository.Create(sheetDto)
 	if err != nil {
-		return api_error.CustomError(c, http.StatusInternalServerError, api_error.SavingError, "sheet", sd)
+		return api_error.CustomError(context, http.StatusInternalServerError, api_error.SAVING_ERROR, "sheet", sheetDto)
 	}
-	return c.JSON(http.StatusCreated, ns)
+	return context.JSON(http.StatusCreated, savedSheet)
 }
 
-func (sh *SheetHandler) GetSheetHandler(c echo.Context) error {
-	id, err := uuid.Parse(c.Param("id"))
+func (sheetHandler *SheetHandler) GetSheetHandler(context echo.Context) error {
+	id, err := uuid.Parse(context.Param("id"))
 	if err != nil {
 		log.Println("Error parsing id as uuid", err)
-		return api_error.CustomError(c, http.StatusBadRequest, api_error.ParseError, "id")
+		return api_error.CustomError(context, http.StatusBadRequest, api_error.PARSE_ERROR, "id")
 	}
 
-	sr := repository.NewSheetRepository(sh.storage)
-	s, err := sr.FindById(id)
+	sheetRepository := repository.NewSheetRepository(sheetHandler.storage)
+	sheet, err := sheetRepository.FindById(id)
 	if err != nil {
-		return api_error.CustomError(c, http.StatusBadRequest, api_error.NotFound, "id", id)
+		return api_error.CustomError(context, http.StatusBadRequest, api_error.NOT_FOUND, "id", id)
 	}
 
-	return c.JSON(http.StatusOK, s)
+	return context.JSON(http.StatusOK, sheet)
 }
 
-func (sh *SheetHandler) GetSheetListHandler(c echo.Context) error {
-	p, err := strconv.Atoi(c.QueryParams().Get("page"))
+func (sheetHandler *SheetHandler) GetSheetListHandler(context echo.Context) error {
+	page, err := strconv.Atoi(context.QueryParams().Get("page"))
 	if err != nil {
 		log.Println("Error converting page from string to int", err)
-		return api_error.CustomError(c, http.StatusBadRequest, api_error.QueryParamError, "page")
+		return api_error.CustomError(context, http.StatusBadRequest, api_error.QUERY_PARAM_ERROR, "page")
 	}
 
-	sz, err := strconv.Atoi(c.QueryParams().Get("size"))
+	size, err := strconv.Atoi(context.QueryParams().Get("size"))
 	if err != nil {
 		log.Println("Error converting size from string to int", err)
-		return api_error.CustomError(c, http.StatusBadRequest, api_error.QueryParamError, "size")
+		return api_error.CustomError(context, http.StatusBadRequest, api_error.QUERY_PARAM_ERROR, "size")
 	}
 
-	sr := repository.NewSheetRepository(sh.storage)
-	sl, err := sr.FindAll(p, sz)
+	sheetRepository := repository.NewSheetRepository(sheetHandler.storage)
+	sheetList, err := sheetRepository.FindAll(page, size)
 	if err != nil {
-		return api_error.CustomError(c, http.StatusInternalServerError, api_error.DbError, "findAll")
+		return api_error.CustomError(context, http.StatusInternalServerError, api_error.DB_ERROR, "findAll")
 	}
 
-	return c.JSON(http.StatusOK, sl)
+	return context.JSON(http.StatusOK, sheetList)
 }
 
-func (sh *SheetHandler) UpdateSheetHandler(c echo.Context) error {
-	os := new(entities.SheetDto)
+func (sheetHandler *SheetHandler) UpdateSheetHandler(context echo.Context) error {
+	sheetDto := new(entities.SheetDto)
 
-	id, err := uuid.Parse(c.Param("id"))
+	id, err := uuid.Parse(context.Param("id"))
 	if err != nil {
 		log.Println("Error parsing id as uuid", err)
-		return api_error.CustomError(c, http.StatusBadRequest, api_error.ParseError, "id")
+		return api_error.CustomError(context, http.StatusBadRequest, api_error.PARSE_ERROR, "id")
 	}
 
-	if err := c.Bind(os); err != nil {
+	if err := context.Bind(sheetDto); err != nil {
 		log.Println("Error binding body: ", err)
-		return api_error.CustomError(c, http.StatusBadRequest, api_error.DtoError)
+		return api_error.CustomError(context, http.StatusBadRequest, api_error.DTO_ERROR)
 	}
 
-	sr := repository.NewSheetRepository(sh.storage)
-	_, err = sr.FindById(id)
+	sheetRepository := repository.NewSheetRepository(sheetHandler.storage)
+	_, err = sheetRepository.FindById(id)
 	if err != nil {
-		return api_error.CustomError(c, http.StatusBadRequest, api_error.NotFound, "id", id)
+		return api_error.CustomError(context, http.StatusBadRequest, api_error.NOT_FOUND, "id", id)
 	}
 
-	su, err := sr.Update(os, id)
+	updatedSheet, err := sheetRepository.Update(sheetDto, id)
 	if err != nil {
-		return api_error.CustomError(c, http.StatusInternalServerError, api_error.DbError, "update")
+		return api_error.CustomError(context, http.StatusInternalServerError, api_error.DB_ERROR, "update")
 	}
 
-	return c.JSON(http.StatusOK, su)
+	return context.JSON(http.StatusOK, updatedSheet)
 }
 
-func (sh *SheetHandler) DeleteSheetHandler(c echo.Context) error {
-	id, err := uuid.Parse(c.Param("id"))
+func (sheetHandler *SheetHandler) DeleteSheetHandler(context echo.Context) error {
+	id, err := uuid.Parse(context.Param("id"))
 	if err != nil {
 		log.Println("Error parsing id as uuid", err)
-		return api_error.CustomError(c, http.StatusBadRequest, api_error.ParseError, "id")
+		return api_error.CustomError(context, http.StatusBadRequest, api_error.PARSE_ERROR, "id")
 	}
 
-	sr := repository.NewSheetRepository(sh.storage)
+	sheetRepository := repository.NewSheetRepository(sheetHandler.storage)
 
-	_, err = sr.FindById(id)
+	_, err = sheetRepository.FindById(id)
 	if err != nil {
-		return api_error.CustomError(c, http.StatusBadRequest, api_error.NotFound, "id", id)
+		return api_error.CustomError(context, http.StatusBadRequest, api_error.NOT_FOUND, "id", id)
 	}
 
-	err = sr.Delete(id)
+	err = sheetRepository.Delete(id)
 	if err != nil {
-		return api_error.CustomError(c, http.StatusInternalServerError, api_error.DbError, "delete")
+		return api_error.CustomError(context, http.StatusInternalServerError, api_error.DB_ERROR, "delete")
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	return context.NoContent(http.StatusNoContent)
 }
