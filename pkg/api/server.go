@@ -40,18 +40,18 @@ func setRoutes(server *echo.Echo, storage *sqlx.DB) {
 }
 
 func setUserRoutes(server *echo.Echo, storage *sqlx.DB) {
-	uh := handler.NewUserHandler(storage)
-	server.POST("/signup", uh.SignUpHandler)
-	server.POST("/login", uh.LoginHandler)
+	userHandler := handler.NewUserHandler(storage)
+	server.POST("/signup", userHandler.SignUpHandler)
+	server.POST("/login", userHandler.LoginHandler)
 }
 
 func setSheetRoutes(server *echo.Echo, storage *sqlx.DB) {
-	sh := handler.NewSheetHandler(storage)
-	server.POST("/sheet", sh.CreateSheetHandler)
-	server.GET("/sheet", sh.GetSheetListHandler)
-	server.GET("/sheet/:id", sh.GetSheetHandler)
-	server.PATCH("/sheet/:id", sh.UpdateSheetHandler)
-	server.DELETE("/sheet/:id", sh.DeleteSheetHandler)
+	sheetHandler := handler.NewSheetHandler(storage)
+	server.POST("/sheet", sheetHandler.CreateSheetHandler)
+	server.GET("/sheet", sheetHandler.GetSheetListHandler)
+	server.GET("/sheet/:id", sheetHandler.GetSheetHandler)
+	server.PATCH("/sheet/:id", sheetHandler.UpdateSheetHandler)
+	server.DELETE("/sheet/:id", sheetHandler.DeleteSheetHandler)
 }
 
 func newDB(connString string) (*sqlx.DB, error) {
