@@ -35,6 +35,7 @@ func NewApp(dbConnString string) (*Application, error) {
 
 func setRoutes(server *echo.Echo, storage *sqlx.DB) {
 	server.GET("/healthz", handler.HealthHandler)
+	server.GET("/npc", handler.GenerateNPCHandler)
 	setUserRoutes(server, storage)
 	setSheetRoutes(server, storage)
 }

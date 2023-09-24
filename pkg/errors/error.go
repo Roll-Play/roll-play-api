@@ -7,11 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type Error struct {
-	Error   string `json:"error"`
-	Message string `json:"message"`
-}
-
 const (
 	NOT_FOUND             = "Not found with %s: %s"
 	DTO_ERROR             = "Error with Dto"
@@ -21,6 +16,11 @@ const (
 	DB_ERROR              = "Error with %s"
 	INTERNAL_SERVER_ERROR = "Something went wrong: %v"
 )
+
+type Error struct {
+	Error   string `json:"error"`
+	Message string `json:"message"`
+}
 
 func CustomError(context echo.Context, https int, message string, args ...any) error {
 	newError := Error{
