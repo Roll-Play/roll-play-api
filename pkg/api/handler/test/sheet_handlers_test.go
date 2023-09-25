@@ -96,11 +96,9 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerSuccess() {
 		Description: "Not a lengthy description",
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
+		UserId:      savedId,
 	}
-	err = suite.db.Get(&sheet, `INSERT INTO sheets (name, description, properties, background, user_id) VALUES ($1, $2, $3, $4, $5) 
-								RETURNING id, name, description, properties, background, user_id`,
-		sheet.Name, sheet.Description, sheet.Properties, sheet.Background, savedId)
-
+	err = createSheet(suite.db, &sheet)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
