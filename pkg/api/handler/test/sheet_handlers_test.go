@@ -63,13 +63,13 @@ func (suite *SheetHandlersSuite) TestPostSheetHandlerSuccess() {
 	request := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(requestBody))
 	request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	record := httptest.NewRecorder()
-	contex := suite.app.Server.NewContext(request, record)
-	contex.Set("user", savedId)
+	context := suite.app.Server.NewContext(request, record)
+	context.Set("user", savedId)
 
 	var jsonRes entities.Sheet
 
 	sheetHandler := handler.NewSheetHandler(suite.db)
-	err = sheetHandler.CreateSheetHandler(contex)
+	err = sheetHandler.CreateSheetHandler(context)
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, record.Code)
@@ -104,16 +104,16 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerSuccess() {
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
 	request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	record := httptest.NewRecorder()
-	contex := suite.app.Server.NewContext(request, record)
-	contex.SetPath("/sheet/:id")
-	contex.SetParamNames("id")
-	contex.SetParamValues(sheet.Id.String())
-	contex.Set("user", savedId)
+	context := suite.app.Server.NewContext(request, record)
+	context.SetPath("/sheet/:id")
+	context.SetParamNames("id")
+	context.SetParamValues(sheet.Id.String())
+	context.Set("user", savedId)
 
 	var jsonRes entities.Sheet
 
 	sheetHandler := handler.NewSheetHandler(suite.db)
-	err = sheetHandler.GetSheetHandler(contex)
+	err = sheetHandler.GetSheetHandler(context)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, record.Code)
 
@@ -143,17 +143,17 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerFailWithWrongUser() {
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
 	request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	record := httptest.NewRecorder()
-	contex := suite.app.Server.NewContext(request, record)
-	contex.SetPath("/sheet/:id")
-	contex.SetParamNames("id")
-	contex.SetParamValues(sheet.Id.String())
+	context := suite.app.Server.NewContext(request, record)
+	context.SetPath("/sheet/:id")
+	context.SetParamNames("id")
+	context.SetParamValues(sheet.Id.String())
 
 	randId, err := uuid.NewRandom()
 	assert.NoError(t, err)
-	contex.Set("user", randId)
+	context.Set("user", randId)
 
 	sheetHandler := handler.NewSheetHandler(suite.db)
-	err = sheetHandler.GetSheetHandler(contex)
+	err = sheetHandler.GetSheetHandler(context)
 	assert.NoError(t, err)
 
 	assert.Equal(t, http.StatusBadRequest, record.Code)
@@ -194,7 +194,7 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 	assert.NoError(t, err)
 
 	sheet3 := entities.Sheet{
-		Name:        "contex Test Name",
+		Name:        "context Test Name",
 		Description: "Not a lengthy description",
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
@@ -210,13 +210,13 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 	urlq.Add("size", "2")
 	request.URL.RawQuery = urlq.Encode()
 	record := httptest.NewRecorder()
-	contex := suite.app.Server.NewContext(request, record)
-	contex.Set("user", savedId)
+	context := suite.app.Server.NewContext(request, record)
+	context.Set("user", savedId)
 
 	var jsonRes []entities.Sheet
 
 	sheetHandler := handler.NewSheetHandler(suite.db)
-	err = sheetHandler.GetSheetListHandler(contex)
+	err = sheetHandler.GetSheetListHandler(context)
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, record.Code)
@@ -262,16 +262,16 @@ func (suite *SheetHandlersSuite) TestPatchSheetHandlerSuccess() {
 	request := httptest.NewRequest(http.MethodPatch, "/", bytes.NewBuffer(requestBody))
 	request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	record := httptest.NewRecorder()
-	contex := suite.app.Server.NewContext(request, record)
-	contex.SetPath("/sheet/:id")
-	contex.SetParamNames("id")
-	contex.SetParamValues(sheet.Id.String())
-	contex.Set("user", savedId)
+	context := suite.app.Server.NewContext(request, record)
+	context.SetPath("/sheet/:id")
+	context.SetParamNames("id")
+	context.SetParamValues(sheet.Id.String())
+	context.Set("user", savedId)
 
 	var jsonRes entities.Sheet
 
 	sheetHandler := handler.NewSheetHandler(suite.db)
-	err = sheetHandler.UpdateSheetHandler(contex)
+	err = sheetHandler.UpdateSheetHandler(context)
 
 	json.Unmarshal(record.Body.Bytes(), &jsonRes)
 
@@ -312,14 +312,14 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerSuccess() {
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
 	request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	record := httptest.NewRecorder()
-	contex := suite.app.Server.NewContext(request, record)
-	contex.SetPath("/sheet/:id")
-	contex.SetParamNames("id")
-	contex.SetParamValues(sheet.Id.String())
-	contex.Set("user", savedId)
+	context := suite.app.Server.NewContext(request, record)
+	context.SetPath("/sheet/:id")
+	context.SetParamNames("id")
+	context.SetParamValues(sheet.Id.String())
+	context.Set("user", savedId)
 
 	sheetHandler := handler.NewSheetHandler(suite.db)
-	err = sheetHandler.DeleteSheetHandler(contex)
+	err = sheetHandler.DeleteSheetHandler(context)
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, record.Code)
@@ -343,16 +343,16 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerFail() {
 	ruuid, err := uuid.NewRandom()
 	assert.NoError(t, err)
 
-	contex := suite.app.Server.NewContext(request, record)
-	contex.SetPath("/sheet/:id")
-	contex.SetParamNames("id")
-	contex.SetParamValues(ruuid.String())
-	contex.Set("user", savedId)
+	context := suite.app.Server.NewContext(request, record)
+	context.SetPath("/sheet/:id")
+	context.SetParamNames("id")
+	context.SetParamValues(ruuid.String())
+	context.Set("user", savedId)
 
 	var jsonRes api_error.Error
 
 	sheetHandler := handler.NewSheetHandler(suite.db)
-	err = sheetHandler.GetSheetHandler(contex)
+	err = sheetHandler.GetSheetHandler(context)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, record.Code)
 
@@ -375,16 +375,16 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFail() {
 	ruuid, err := uuid.NewRandom()
 	assert.NoError(t, err)
 
-	contex := suite.app.Server.NewContext(request, record)
-	contex.SetPath("/sheet/:id")
-	contex.SetParamNames("id")
-	contex.SetParamValues(ruuid.String())
-	contex.Set("user", savedId)
+	context := suite.app.Server.NewContext(request, record)
+	context.SetPath("/sheet/:id")
+	context.SetParamNames("id")
+	context.SetParamValues(ruuid.String())
+	context.Set("user", savedId)
 
 	var jsonRes api_error.Error
 
 	sheetHandler := handler.NewSheetHandler(suite.db)
-	err = sheetHandler.DeleteSheetHandler(contex)
+	err = sheetHandler.DeleteSheetHandler(context)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, record.Code)
 
@@ -417,16 +417,16 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFailWrongUser() {
 	ruuid, err := uuid.NewRandom()
 	assert.NoError(t, err)
 
-	contex := suite.app.Server.NewContext(request, record)
-	contex.SetPath("/sheet/:id")
-	contex.SetParamNames("id")
-	contex.SetParamValues(ruuid.String())
-	contex.Set("user", ruuid)
+	context := suite.app.Server.NewContext(request, record)
+	context.SetPath("/sheet/:id")
+	context.SetParamNames("id")
+	context.SetParamValues(ruuid.String())
+	context.Set("user", ruuid)
 
 	var jsonRes api_error.Error
 
 	sheetHandler := handler.NewSheetHandler(suite.db)
-	err = sheetHandler.DeleteSheetHandler(contex)
+	err = sheetHandler.DeleteSheetHandler(context)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, record.Code)
 
