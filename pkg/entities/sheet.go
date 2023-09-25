@@ -13,6 +13,7 @@ type Sheet struct {
 	Description string       `db:"description" json:"description"`
 	Properties  string       `db:"properties" json:"properties"`
 	Background  string       `db:"background" json:"background"`
+	UserId      uuid.UUID    `db:"user_id"`
 	CreatedAt   time.Time    `db:"created_at"`
 	UpdatedAt   time.Time    `db:"updated_at"`
 	DeletedAt   sql.NullTime `db:"deleted_at"`
