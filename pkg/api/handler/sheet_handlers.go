@@ -31,8 +31,9 @@ func (sheetHandler *SheetHandler) CreateSheetHandler(context echo.Context) error
 		return api_error.CustomError(context, http.StatusBadRequest, api_error.DTO_ERROR)
 	}
 
+	userId := context.Get("user").(uuid.UUID)
 	sheetRepository := repository.NewSheetRepository(sheetHandler.storage)
-	savedSheet, err := sheetRepository.Create(sheetDto)
+	savedSheet, err := sheetRepository.Create(sheetDto, userId)
 	if err != nil {
 		return api_error.CustomError(context, http.StatusInternalServerError, api_error.SAVING_ERROR, "sheet", sheetDto)
 	}
@@ -46,8 +47,9 @@ func (sheetHandler *SheetHandler) GetSheetHandler(context echo.Context) error {
 		return api_error.CustomError(context, http.StatusBadRequest, api_error.PARSE_ERROR, "id")
 	}
 
+	userId := context.Get("user").(uuid.UUID)
 	sheetRepository := repository.NewSheetRepository(sheetHandler.storage)
-	sheet, err := sheetRepository.FindById(id)
+	sheet, err := sheetRepository.FindByIdAndUserId(id, userId)
 	if err != nil {
 		return api_error.CustomError(context, http.StatusBadRequest, api_error.NOT_FOUND, "id", id)
 	}
@@ -68,8 +70,9 @@ func (sheetHandler *SheetHandler) GetSheetListHandler(context echo.Context) erro
 		return api_error.CustomError(context, http.StatusBadRequest, api_error.QUERY_PARAM_ERROR, "size")
 	}
 
+	userId := context.Get("user").(uuid.UUID)
 	sheetRepository := repository.NewSheetRepository(sheetHandler.storage)
-	sheetList, err := sheetRepository.FindAll(page, size)
+	sheetList, err := sheetRepository.FindAllByUserId(page, size, userId)
 	if err != nil {
 		return api_error.CustomError(context, http.StatusInternalServerError, api_error.DB_ERROR, "findAll")
 	}
@@ -91,8 +94,9 @@ func (sheetHandler *SheetHandler) UpdateSheetHandler(context echo.Context) error
 		return api_error.CustomError(context, http.StatusBadRequest, api_error.DTO_ERROR)
 	}
 
+	userId := context.Get("user").(uuid.UUID)
 	sheetRepository := repository.NewSheetRepository(sheetHandler.storage)
-	_, err = sheetRepository.FindById(id)
+	_, err = sheetRepository.FindByIdAndUserId(id, userId)
 	if err != nil {
 		return api_error.CustomError(context, http.StatusBadRequest, api_error.NOT_FOUND, "id", id)
 	}
@@ -112,9 +116,9 @@ func (sheetHandler *SheetHandler) DeleteSheetHandler(context echo.Context) error
 		return api_error.CustomError(context, http.StatusBadRequest, api_error.PARSE_ERROR, "id")
 	}
 
+	userId := context.Get("user").(uuid.UUID)
 	sheetRepository := repository.NewSheetRepository(sheetHandler.storage)
-
-	_, err = sheetRepository.FindById(id)
+	_, err = sheetRepository.FindByIdAndUserId(id, userId)
 	if err != nil {
 		return api_error.CustomError(context, http.StatusBadRequest, api_error.NOT_FOUND, "id", id)
 	}
