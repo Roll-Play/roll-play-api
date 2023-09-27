@@ -20,10 +20,13 @@ func NewSheetRepository(connection *sqlx.DB) *SheetRepository {
 	}
 }
 
-func (sr *SheetRepository) Create(sheetDto *entities.SheetDto) (*entities.Sheet, error) {
+func (sr *SheetRepository) Create(sheetDto *entities.SheetDto, userId uuid.UUID) (*entities.Sheet, error) {
 	sheet := new(entities.Sheet)
-	err := sr.db.Get(sheet, "INSERT INTO sheets (name, description, properties, background) VALUES ($1, $2, $3, $4) RETURNING *",
-		sheetDto.Name, sheetDto.Description, sheetDto.Properties, sheetDto.Background)
+	err := sr.db.Get(sheet,
+		`INSERT INTO sheets (name, description, properties, background, user_id) 
+			VALUES ($1, $2, $3, $4, $5) 
+			RETURNING *`,
+		sheetDto.Name, sheetDto.Description, sheetDto.Properties, sheetDto.Background, userId)
 
 	if err != nil {
 		log.Println("Error creating record with dto: ", sheetDto)
@@ -34,9 +37,9 @@ func (sr *SheetRepository) Create(sheetDto *entities.SheetDto) (*entities.Sheet,
 
 }
 
-func (sr *SheetRepository) FindById(id uuid.UUID) (*entities.Sheet, error) {
+func (sr *SheetRepository) FindByIdAndUserId(id uuid.UUID, userId uuid.UUID) (*entities.Sheet, error) {
 	sheet := new(entities.Sheet)
-	err := sr.db.Get(sheet, "SELECT s.* FROM sheets s WHERE s.id = $1", id)
+	err := sr.db.Get(sheet, "SELECT s.* FROM sheets s WHERE s.id = $1 AND s.user_id = $2", id, userId)
 
 	if err != nil {
 		log.Println("Error finding record with id: ", id)
@@ -46,10 +49,15 @@ func (sr *SheetRepository) FindById(id uuid.UUID) (*entities.Sheet, error) {
 	return sheet, nil
 }
 
-func (sr *SheetRepository) FindAll(page int, size int) (*[]entities.Sheet, error) {
+func (sr *SheetRepository) FindAllByUserId(page int, size int, userId uuid.UUID) (*[]entities.Sheet, error) {
 	r := []entities.Sheet{}
 
-	err := sr.db.Select(&r, "SELECT s.* FROM sheets s ORDER BY s.name LIMIT $1 OFFSET $2", size, page*size)
+	err := sr.db.Select(&r,
+		`SELECT s.* FROM sheets s 
+			WHERE s.user_id = $1 
+			ORDER BY s.name 
+			LIMIT $2 OFFSET $3`,
+		userId, size, page*size)
 	if err != nil {
 		log.Println("Error finding records for page with page and size:", page, size)
 		return &r, err
