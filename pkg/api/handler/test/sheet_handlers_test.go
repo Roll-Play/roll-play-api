@@ -14,7 +14,6 @@ import (
 	"github.com/Roll-play/roll-play-backend/pkg/api/handler"
 	"github.com/Roll-play/roll-play-backend/pkg/entities"
 	api_error "github.com/Roll-play/roll-play-backend/pkg/errors"
-	repository "github.com/Roll-play/roll-play-backend/pkg/repositories"
 	"github.com/Roll-play/roll-play-backend/pkg/utils"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -50,7 +49,7 @@ func (suite *SheetHandlersSuite) TearDownTest() {
 
 func (suite *SheetHandlersSuite) TestPostSheetHandlerSuccess() {
 	t := suite.T()
-	savedId, err := setupUser(suite.db, "test", t)
+	savedId, err := utils.SetupUser(suite.db, "test", t)
 	assert.NoError(t, err)
 
 	requestBody := []byte(`{
@@ -93,7 +92,7 @@ func (suite *SheetHandlersSuite) TestPostSheetHandlerSuccess() {
 
 func (suite *SheetHandlersSuite) TestGetSheetHandlerSuccess() {
 	t := suite.T()
-	savedId, err := setupUser(suite.db, "test", t)
+	savedId, err := utils.SetupUser(suite.db, "test", t)
 	assert.NoError(t, err)
 
 	sheet := entities.Sheet{
@@ -102,7 +101,7 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerSuccess() {
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
 	}
-	createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
+	utils.CreateSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -133,7 +132,7 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerSuccess() {
 
 func (suite *SheetHandlersSuite) TestGetSheetHandlerFailWithWrongUser() {
 	t := suite.T()
-	savedId, err := setupUser(suite.db, "test", t)
+	savedId, err := utils.SetupUser(suite.db, "test", t)
 	assert.NoError(t, err)
 
 	sheet := entities.Sheet{
@@ -142,7 +141,7 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerFailWithWrongUser() {
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
 	}
-	createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
+	utils.CreateSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -174,7 +173,7 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerFailWithWrongUser() {
 func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 	t := suite.T()
 
-	savedId, err := setupUser(suite.db, "test", t)
+	savedId, err := utils.SetupUser(suite.db, "test", t)
 	assert.NoError(t, err)
 	sheet := entities.Sheet{
 		Name:        "A Test Name",
@@ -182,10 +181,10 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
 	}
-	createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
+	utils.CreateSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
-	savedId2, err := setupUser(suite.db, "test2", t)
+	savedId2, err := utils.SetupUser(suite.db, "test2", t)
 	assert.NoError(t, err)
 	sheet2 := entities.Sheet{
 		Name:        "B Other Name",
@@ -193,7 +192,7 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 		Properties:  "This should look like a json",
 		Background:  "Not a background",
 	}
-	createSheetAndSheetUser(suite.db, &sheet2, savedId2, entities.READ, true)
+	utils.CreateSheetAndSheetUser(suite.db, &sheet2, savedId2, entities.READ, true)
 	assert.NoError(t, err)
 
 	sheet3 := entities.Sheet{
@@ -202,7 +201,7 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
 	}
-	createSheetAndSheetUser(suite.db, &sheet3, savedId, entities.READ, true)
+	utils.CreateSheetAndSheetUser(suite.db, &sheet3, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -219,7 +218,6 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 
 	sheetHandler := handler.NewSheetHandler(suite.db)
 	err = sheetHandler.GetSheetListHandler(context)
-
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, record.Code)
 
@@ -243,7 +241,7 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 func (suite *SheetHandlersSuite) TestPatchSheetHandlerSuccess() {
 	t := suite.T()
 
-	savedId, err := setupUser(suite.db, "test", t)
+	savedId, err := utils.SetupUser(suite.db, "test", t)
 	assert.NoError(t, err)
 
 	sheet := entities.Sheet{
@@ -252,7 +250,7 @@ func (suite *SheetHandlersSuite) TestPatchSheetHandlerSuccess() {
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
 	}
-	createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
+	utils.CreateSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	us := entities.Sheet{
@@ -301,7 +299,7 @@ func (suite *SheetHandlersSuite) TestPatchSheetHandlerSuccess() {
 func (suite *SheetHandlersSuite) TestPatchSheetHandlerFailWithForbiden() {
 	t := suite.T()
 
-	savedId, err := setupUser(suite.db, "test", t)
+	savedId, err := utils.SetupUser(suite.db, "test", t)
 	assert.NoError(t, err)
 
 	sheet := entities.Sheet{
@@ -310,7 +308,7 @@ func (suite *SheetHandlersSuite) TestPatchSheetHandlerFailWithForbiden() {
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
 	}
-	createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, false)
+	utils.CreateSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, false)
 	assert.NoError(t, err)
 
 	us := entities.Sheet{
@@ -348,7 +346,7 @@ func (suite *SheetHandlersSuite) TestPatchSheetHandlerFailWithForbiden() {
 func (suite *SheetHandlersSuite) TestDeleteSheetHandlerSuccess() {
 	t := suite.T()
 
-	savedId, err := setupUser(suite.db, "test", t)
+	savedId, err := utils.SetupUser(suite.db, "test", t)
 	assert.NoError(t, err)
 
 	sheet := entities.Sheet{
@@ -357,7 +355,7 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerSuccess() {
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
 	}
-	createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
+	utils.CreateSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -384,7 +382,7 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerSuccess() {
 func (suite *SheetHandlersSuite) TestGetSheetHandlerFail() {
 	t := suite.T()
 
-	savedId, err := setupUser(suite.db, "test", t)
+	savedId, err := utils.SetupUser(suite.db, "test", t)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -416,7 +414,7 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerFail() {
 func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFail() {
 	t := suite.T()
 
-	savedId, err := setupUser(suite.db, "test", t)
+	savedId, err := utils.SetupUser(suite.db, "test", t)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -448,7 +446,7 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFail() {
 func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFailWrongUser() {
 	t := suite.T()
 
-	savedId, err := setupUser(suite.db, "test", t)
+	savedId, err := utils.SetupUser(suite.db, "test", t)
 	assert.NoError(t, err)
 
 	sheet := entities.Sheet{
@@ -457,7 +455,7 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFailWrongUser() {
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
 	}
-	err = createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
+	err = utils.CreateSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -488,31 +486,4 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFailWrongUser() {
 
 func TestSheetHandlersSuite(t *testing.T) {
 	suite.Run(t, new(SheetHandlersSuite))
-}
-
-func setupUser(db *sqlx.DB, username string, t *testing.T) (uuid.UUID, error) {
-	userRepository := repository.NewUserRepository(db)
-	savedUser, err := userRepository.Create(entities.User{
-		Username: username,
-		Email:    username + "@test",
-		Password: "test",
-	})
-
-	if err != nil {
-		return uuid.New(), err
-	}
-
-	return savedUser.Id, nil
-}
-
-func createSheetAndSheetUser(db *sqlx.DB, sheet *entities.Sheet, userId uuid.UUID, permission int, owner bool) error {
-	err := db.Get(sheet, `INSERT INTO sheets (name, description, properties, background) VALUES ($1, $2, $3, $4)
-	RETURNING id, name, description, properties, background`,
-		sheet.Name, sheet.Description, sheet.Properties, sheet.Background)
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Exec(`INSERT INTO sheet_user (sheet_id, user_id, permission, owner) VALUES ($1, $2, $3, $4)`, sheet.Id, userId, permission, owner)
-	return err
 }
