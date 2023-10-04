@@ -1,6 +1,6 @@
 package entities
 
 const (
-	EDIT = iota
+	WRITE = iota
 	READ
 )

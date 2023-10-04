@@ -38,6 +38,7 @@ func setRoutes(server *echo.Echo, storage *sqlx.DB) {
 	server.GET("/npc", handler.GenerateNPCHandler)
 	setUserRoutes(server, storage)
 	setSheetRoutes(server, storage)
+	setSheetUserRoutes(server, storage)
 }
 
 func setUserRoutes(server *echo.Echo, storage *sqlx.DB) {
@@ -53,6 +54,11 @@ func setSheetRoutes(server *echo.Echo, storage *sqlx.DB) {
 	server.GET("/sheet/:id", sheetHandler.GetSheetHandler)
 	server.PATCH("/sheet/:id", sheetHandler.UpdateSheetHandler)
 	server.DELETE("/sheet/:id", sheetHandler.DeleteSheetHandler)
+}
+
+func setSheetUserRoutes(server *echo.Echo, storage *sqlx.DB) {
+	sheetUserHandler := handler.NewSheetUserHandler(storage)
+	server.POST("/sheet/:id/permission", sheetUserHandler.UpdatePermissions)
 }
 
 func newDB(connString string) (*sqlx.DB, error) {

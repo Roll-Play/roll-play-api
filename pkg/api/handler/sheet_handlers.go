@@ -107,7 +107,7 @@ func (sheetHandler *SheetHandler) UpdateSheetHandler(context echo.Context) error
 		return api_error.CustomError(context, http.StatusBadRequest, api_error.NOT_FOUND, "id", id)
 	}
 
-	if !sheet.Owner && sheet.Permission != entities.EDIT {
+	if !sheet.Owner && sheet.Permission != entities.WRITE {
 		return api_error.CustomError(context, http.StatusForbidden, api_error.PERMISSION_ERROR, userId)
 	}
 
