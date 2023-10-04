@@ -8,15 +8,15 @@ import (
 )
 
 type Sheet struct {
-	Id          uuid.UUID    `db:"id" json:"id"`
-	Name        string       `db:"name" json:"name"`
-	Description string       `db:"description" json:"description"`
-	Properties  string       `db:"properties" json:"properties"`
-	Background  string       `db:"background" json:"background"`
-	UserId      uuid.UUID    `db:"user_id"`
-	CreatedAt   time.Time    `db:"created_at"`
-	UpdatedAt   time.Time    `db:"updated_at"`
-	DeletedAt   sql.NullTime `db:"deleted_at"`
+	Id          uuid.UUID `db:"id" json:"id"`
+	Name        string    `db:"name" json:"name"`
+	Description string    `db:"description" json:"description"`
+	Properties  string    `db:"properties" json:"properties"`
+	Background  string    `db:"background" json:"background"`
+	SheetUser
+	CreatedAt time.Time    `db:"created_at"`
+	UpdatedAt time.Time    `db:"updated_at"`
+	DeletedAt sql.NullTime `db:"deleted_at"`
 }
 
 type SheetDto struct {
