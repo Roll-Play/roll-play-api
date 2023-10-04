@@ -77,13 +77,18 @@ func (suite *SheetHandlersSuite) TestPostSheetHandlerSuccess() {
 	json.Unmarshal(record.Body.Bytes(), &jsonRes)
 
 	var sheet entities.Sheet
-	suite.db.Get(&sheet, "SELECT name, description, properties, background, user_id FROM sheets WHERE id=$1", jsonRes.Id)
+	suite.db.Get(&sheet, "SELECT s.name, s.description, s.properties, s.background FROM sheets s WHERE s.id=$1", jsonRes.Id)
 
 	assert.Equal(t, jsonRes.Name, sheet.Name)
 	assert.Equal(t, jsonRes.Description, sheet.Description)
 	assert.Equal(t, jsonRes.Properties, sheet.Properties)
 	assert.Equal(t, jsonRes.Background, sheet.Background)
-	assert.Equal(t, savedId, sheet.UserId)
+
+	var sheetUser entities.SheetUser
+	suite.db.Get(&sheetUser, "SELECT * FROM sheet_user WHERE sheet_id=$1 AND user_id=$2", jsonRes.Id, savedId)
+
+	assert.Equal(t, sheetUser.Owner, true)
+	assert.Equal(t, sheetUser.Permission, entities.READ)
 }
 
 func (suite *SheetHandlersSuite) TestGetSheetHandlerSuccess() {
@@ -96,9 +101,8 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerSuccess() {
 		Description: "Not a lengthy description",
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
-		UserId:      savedId,
 	}
-	err = createSheet(suite.db, &sheet)
+	createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -123,6 +127,8 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerSuccess() {
 	assert.Equal(t, jsonRes.Description, sheet.Description)
 	assert.Equal(t, jsonRes.Properties, sheet.Properties)
 	assert.Equal(t, jsonRes.Background, sheet.Background)
+	assert.Equal(t, jsonRes.Permission, entities.READ)
+	assert.Equal(t, jsonRes.Owner, true)
 }
 
 func (suite *SheetHandlersSuite) TestGetSheetHandlerFailWithWrongUser() {
@@ -135,9 +141,8 @@ func (suite *SheetHandlersSuite) TestGetSheetHandlerFailWithWrongUser() {
 		Description: "Not a lengthy description",
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
-		UserId:      savedId,
 	}
-	err = createSheet(suite.db, &sheet)
+	createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -176,9 +181,8 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 		Description: "Not a lengthy description",
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
-		UserId:      savedId,
 	}
-	err = createSheet(suite.db, &sheet)
+	createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	savedId2, err := setupUser(suite.db, "test2", t)
@@ -188,9 +192,8 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 		Description: "Not a description",
 		Properties:  "This should look like a json",
 		Background:  "Not a background",
-		UserId:      savedId2,
 	}
-	err = createSheet(suite.db, &sheet2)
+	createSheetAndSheetUser(suite.db, &sheet2, savedId2, entities.READ, true)
 	assert.NoError(t, err)
 
 	sheet3 := entities.Sheet{
@@ -198,9 +201,8 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 		Description: "Not a lengthy description",
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
-		UserId:      savedId,
 	}
-	err = createSheet(suite.db, &sheet3)
+	createSheetAndSheetUser(suite.db, &sheet3, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -227,11 +229,15 @@ func (suite *SheetHandlersSuite) TestGetSheetListHandlerSuccess() {
 	assert.Equal(t, jsonRes[0].Description, sheet.Description)
 	assert.Equal(t, jsonRes[0].Properties, sheet.Properties)
 	assert.Equal(t, jsonRes[0].Background, sheet.Background)
+	assert.Equal(t, jsonRes[0].Permission, entities.READ)
+	assert.Equal(t, jsonRes[0].Owner, true)
 
 	assert.Equal(t, jsonRes[1].Name, sheet3.Name)
 	assert.Equal(t, jsonRes[1].Description, sheet3.Description)
 	assert.Equal(t, jsonRes[1].Properties, sheet3.Properties)
 	assert.Equal(t, jsonRes[1].Background, sheet3.Background)
+	assert.Equal(t, jsonRes[1].Permission, entities.READ)
+	assert.Equal(t, jsonRes[1].Owner, true)
 }
 
 func (suite *SheetHandlersSuite) TestPatchSheetHandlerSuccess() {
@@ -245,9 +251,8 @@ func (suite *SheetHandlersSuite) TestPatchSheetHandlerSuccess() {
 		Description: "Not a lengthy description",
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
-		UserId:      savedId,
 	}
-	err = createSheet(suite.db, &sheet)
+	createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	us := entities.Sheet{
@@ -293,6 +298,53 @@ func (suite *SheetHandlersSuite) TestPatchSheetHandlerSuccess() {
 	assert.Equal(t, jsonRes.Background, sheet.Background)
 }
 
+func (suite *SheetHandlersSuite) TestPatchSheetHandlerFailWithForbiden() {
+	t := suite.T()
+
+	savedId, err := setupUser(suite.db, "test", t)
+	assert.NoError(t, err)
+
+	sheet := entities.Sheet{
+		Name:        "Test Name",
+		Description: "Not a lengthy description",
+		Properties:  "This should look like a json",
+		Background:  "Not a lenghty background",
+	}
+	createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, false)
+	assert.NoError(t, err)
+
+	us := entities.Sheet{
+		Name:        "New Name",
+		Description: "New description",
+		Properties:  "New json",
+	}
+
+	requestBody, errm := json.Marshal(us)
+	assert.NoError(t, errm)
+
+	request := httptest.NewRequest(http.MethodPatch, "/", bytes.NewBuffer(requestBody))
+	request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	record := httptest.NewRecorder()
+	context := suite.app.Server.NewContext(request, record)
+	context.SetPath("/sheet/:id")
+	context.SetParamNames("id")
+	context.SetParamValues(sheet.Id.String())
+	context.Set("user", savedId)
+
+	var jsonRes api_error.Error
+
+	sheetHandler := handler.NewSheetHandler(suite.db)
+	err = sheetHandler.UpdateSheetHandler(context)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusForbidden, record.Code)
+
+	json.Unmarshal(record.Body.Bytes(), &jsonRes)
+
+	assert.Equal(t, jsonRes.Error, http.StatusText(record.Code))
+	assert.Equal(t, jsonRes.Message, fmt.Sprintf(api_error.PERMISSION_ERROR, savedId))
+}
+
 func (suite *SheetHandlersSuite) TestDeleteSheetHandlerSuccess() {
 	t := suite.T()
 
@@ -304,9 +356,8 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerSuccess() {
 		Description: "Not a lengthy description",
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
-		UserId:      savedId,
 	}
-	err = createSheet(suite.db, &sheet)
+	createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -405,9 +456,8 @@ func (suite *SheetHandlersSuite) TestDeleteSheetHandlerFailWrongUser() {
 		Description: "Not a lengthy description",
 		Properties:  "This should look like a json",
 		Background:  "Not a lenghty background",
-		UserId:      savedId,
 	}
-	err = createSheet(suite.db, &sheet)
+	err = createSheetAndSheetUser(suite.db, &sheet, savedId, entities.READ, true)
 	assert.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -455,9 +505,14 @@ func setupUser(db *sqlx.DB, username string, t *testing.T) (uuid.UUID, error) {
 	return savedUser.Id, nil
 }
 
-func createSheet(db *sqlx.DB, sheet *entities.Sheet) error {
-	err := db.Get(sheet, `INSERT INTO sheets (name, description, properties, background, user_id) VALUES ($1, $2, $3, $4, $5) 
-	RETURNING id, name, description, properties, background, user_id`,
-		sheet.Name, sheet.Description, sheet.Properties, sheet.Background, sheet.UserId)
+func createSheetAndSheetUser(db *sqlx.DB, sheet *entities.Sheet, userId uuid.UUID, permission int, owner bool) error {
+	err := db.Get(sheet, `INSERT INTO sheets (name, description, properties, background) VALUES ($1, $2, $3, $4)
+	RETURNING id, name, description, properties, background`,
+		sheet.Name, sheet.Description, sheet.Properties, sheet.Background)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`INSERT INTO sheet_user (sheet_id, user_id, permission, owner) VALUES ($1, $2, $3, $4)`, sheet.Id, userId, permission, owner)
 	return err
 }
