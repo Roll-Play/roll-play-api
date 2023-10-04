@@ -15,6 +15,7 @@ const (
 	QUERY_PARAM_ERROR     = "Query param '%s' error"
 	DB_ERROR              = "Error with %s"
 	INTERNAL_SERVER_ERROR = "Something went wrong: %v"
+	PERMISSION_ERROR      = "The user %s doesn't have the necessary permissions"
 )
 
 type Error struct {
