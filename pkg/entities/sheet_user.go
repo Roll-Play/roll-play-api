@@ -2,6 +2,11 @@ package entities
 
 import "github.com/google/uuid"
 
+const (
+	WRITE = iota
+	READ
+)
+
 type SheetUser struct {
 	SheetId    uuid.UUID `db:"sheet_id" json:"sheet_id"`
 	UserId     uuid.UUID `db:"user_id" json:"user_id"`
