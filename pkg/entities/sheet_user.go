@@ -8,3 +8,8 @@ type SheetUser struct {
 	Permission int       `db:"permission" json:"permission"`
 	Owner      bool      `db:"owner" json:"owner"`
 }
+
+const (
+	WRITE = iota
+	READ
+)
