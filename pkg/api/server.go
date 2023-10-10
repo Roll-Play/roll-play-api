@@ -39,6 +39,7 @@ func setRoutes(server *echo.Echo, storage *sqlx.DB) {
 	setUserRoutes(server, storage)
 	setSheetRoutes(server, storage)
 	setSheetUserRoutes(server, storage)
+	setGroupRoutes(server, storage)
 }
 
 func setUserRoutes(server *echo.Echo, storage *sqlx.DB) {
@@ -59,6 +60,13 @@ func setSheetRoutes(server *echo.Echo, storage *sqlx.DB) {
 func setSheetUserRoutes(server *echo.Echo, storage *sqlx.DB) {
 	sheetUserHandler := handler.NewSheetUserHandler(storage)
 	server.POST("/sheet/:id/permission", sheetUserHandler.UpdatePermissions)
+}
+
+func setGroupRoutes(server *echo.Echo, storage *sqlx.DB) {
+	groupHandler := handler.NewGroupHandler(storage)
+	server.POST("/group", groupHandler.CreateGroupHandler)
+	server.GET("/group/:id", groupHandler.GetGroupHandler)
+	server.DELETE("/group/:id", groupHandler.DeleteGroupHandler)
 }
 
 func newDB(connString string) (*sqlx.DB, error) {
